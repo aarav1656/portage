@@ -6,7 +6,8 @@
     "dev": "next dev --webpack --port 3000",
     "build": "next build --webpack",
     "start": "next start --port 3000",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed-tessera": "node scripts/seed-tessera.mjs"
   },
   "dependencies": {
     "@meteora-ag/dynamic-bonding-curve-sdk": "1.5.12",

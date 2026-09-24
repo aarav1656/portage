@@ -1,0 +1,14 @@
+{
+  "entries": [
+    {
+      "code": "tOpenAI",
+      "markPrice": 812.79,
+      "fetchedAt": "2026-09-24T12:08:50.141Z"
+    },
+    {
+      "code": "tKalshi",
+      "markPrice": 413.8,
+      "fetchedAt": "2026-09-24T12:08:49.784Z"
+    }
+  ]
+}

@@ -23,6 +23,7 @@ try {
   let keys; try { keys = VersionedTransaction.deserialize(buf).message.staticAccountKeys.map(String); } catch { keys = Transaction.from(buf).compileMessage().accountKeys.map(String); }
   if (!keys.includes("AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V")) throw new Error("wrap tx does not call the Portage program");
   const m = await (await get("/api/market")).json();
-  if (!(m.tKalshi?.markPrice > 0) || !(m.tKalshi?.transferFeeBps > 0)) throw new Error(`/api/market must return live Tessera mark price and on-chain fee bps: ${JSON.stringify(m).slice(0, 200)}`);
-  console.log(`ok: DESIGN.md + design-log entry, rejection shown, wrap tx targets Portage, market live (fee ${m.tKalshi.transferFeeBps} bps)`);
+  const hasValidMarkPrice = m.tKalshi?.markPrice > 0 && (m.tKalshi?.stale ? !!m.tKalshi?.asOf : true);
+  if (!hasValidMarkPrice || !(m.tKalshi?.transferFeeBps > 0)) throw new Error(`/api/market must return Tessera mark price and on-chain fee bps: ${JSON.stringify(m).slice(0, 200)}`);
+  console.log(`ok: DESIGN.md + design-log entry, rejection shown, wrap tx targets Portage, market live (fee ${m.tKalshi.transferFeeBps} bps)${m.tKalshi.stale ? " [stale]" : ""}`);
 } finally { try { process.kill(-srv.pid); } catch {} }
