@@ -1,7 +1,7 @@
 {
-  "as": "vault/wrapper product dashboard for Solana degen traders wrapping pre-IPO Tessera tokens for a DBC launch, customs manifest for cargo crossing between two token programs",
+  "as": "proof ledger for Solana traders, customs manifest",
   "dials": "4/3/7",
-  "type": "Instrument Serif",
+  "type": "Domine",
   "surface": "kraft ledger cream",
   "accent": "oxidized teal ink",
   "radius": "4",
@@ -9,5 +9,5 @@
   "direction": "",
   "review": "",
   "cwd": "/Users/kamal/Desktop/stocklana/portage/apps/web",
-  "ts": "2026-09-24T10:46:38Z"
+  "ts": "2026-09-24T15:39:00Z"
 }
