@@ -1,0 +1,60 @@
+{
+  "version": 1,
+  "project": {
+    "name": "portage",
+    "created": "2026-09-24T10:46:06+00:00"
+  },
+  "features": [
+    {
+      "id": "wrap-dbc",
+      "title": "Wrap fee-bearing Tessera T-Tokens so they can quote a Meteora DBC launch",
+      "priority": "high",
+      "tags": [],
+      "product": true,
+      "product_gate": {
+        "user": "Tessera tKalshi and tOpenAI holders and launchers quoting in them",
+        "buyer": "Tessera (demand for T-Tokens) and Meteora (new quote-mint class)",
+        "job": "launch a bonding-curve token priced in a Tessera T-Token",
+        "verb": "wrap tKalshi 1:1 and create a DBC pool quoted in the wrapped mint",
+        "wedge": "zero-extension wrapper with on-chain supply <= vault invariant",
+        "direct_alternative": "Raydium LaunchLab (Stonkfun) quoted directly in the T-Token",
+        "new_capability": "Meteora DBC config quoted in a Tessera token, impossible today: DBC rejects the raw mint with QuoteMintHasNonZeroTransferFee",
+        "kill_shot": "demand for tKalshi-quoted launches is thin: sampled pools have few trades",
+        "evidence": [
+          "DBC source utils/token.rs: transfer-fee check precedes badge check; mainnet sim red 6081 on raw tKalshi",
+          "tKalshi live transfer fee 20 bps (RPC, epoch 1041)",
+          "DexScreener: 5/5 tKalshi and 21/23 tOpenAI pairs on Raydium, 0 on DBC"
+        ],
+        "decision": "pass",
+        "updated": "2026-09-24T10:46:06+00:00"
+      },
+      "blocked": null,
+      "notes": [],
+      "criteria": [
+        {
+          "kind": "auto",
+          "name": "vault-tests",
+          "cmd": "cd packages/vault && npx vitest run 2>&1 | grep -q '8 passed'"
+        },
+        {
+          "kind": "auto",
+          "name": "web",
+          "cmd": "node check-web.mjs | grep -q '^ok:'"
+        },
+        {
+          "kind": "manual",
+          "name": "mainnet::vault deployed, one real wrap and DBC pool, Solscan links in README"
+        }
+      ]
+    }
+  ],
+  "customers": [],
+  "history": [
+    {
+      "ts": "2026-09-24T10:46:07+00:00",
+      "checked": 1,
+      "failed_criteria": 0
+    }
+  ],
+  "updated": "2026-09-24T10:46:26+00:00"
+}

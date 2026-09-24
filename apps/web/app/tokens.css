@@ -1,0 +1,35 @@
+:root {
+  --paper: #e3d8b4;
+  --paper-2: #d9c89a;
+  --paper-3: #cbb57f;
+  --ink: #241c12;
+  --ink-2: #5b4e3a;
+  --ink-3: #8a7a5c;
+  --line: #c9b99a;
+  --line-strong: #a8925f;
+  --accent: #1f6f5c;
+  --accent-2: #185a4a;
+  --accent-ink: #e3d8b4;
+  --rejected: #8c2f1b;
+  --rejected-2: #6f2414;
+  --rejected-ink: #e3d8b4;
+
+  --font-display: var(--font-display-serif), "Iowan Old Style", serif;
+  --font-body: var(--font-work-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SF Mono", monospace;
+
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-2xl: 6rem;
+
+  --radius: 4px;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+}
