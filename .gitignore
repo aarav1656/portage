@@ -8,7 +8,8 @@ target
 .anchor
 test-ledger
 research/
-docs/
+docs/*
+!docs/architecture/
 packages/*/out/
 apps/web/.cache/
 apps/web/lib/.cache/
