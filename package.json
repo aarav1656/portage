@@ -1,0 +1,6 @@
+{
+  "name": "portage",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "workspaces": ["packages/*", "apps/*"]
+}
