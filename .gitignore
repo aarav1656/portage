@@ -10,6 +10,12 @@ test-ledger
 research/
 docs/*
 !docs/architecture/
+!docs/README.md
+!docs/concepts/
+!docs/guides/
+!docs/program/
+!docs/sdk/
+!docs/security/
 packages/*/out/
 apps/web/.cache/
 apps/web/lib/.cache/
