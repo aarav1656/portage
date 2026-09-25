@@ -13,3 +13,4 @@ docs/*
 packages/*/out/
 apps/web/.cache/
 apps/web/lib/.cache/
+.progress/
