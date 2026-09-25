@@ -109,7 +109,15 @@ export function DevnetPanel() {
         const expected = built.expectedRaw;
         const min = built.minRaw;
         setPhase({ kind: "signing", expected, min });
-        sig = await wallet.signAndSend(built.txBase64, "solana:devnet");
+        const signed = await wallet.signOnly(built.txBase64, "solana:devnet");
+        const sent = await fetch("/api/devnet/send", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ tx: signed }),
+        });
+        const sentBody = (await sent.json()) as { signature?: string; error?: string };
+        if (!sent.ok || !sentBody.signature) throw new Error(sentBody.error ?? "devnet send failed");
+        sig = sentBody.signature;
         const started = Date.now();
         for (;;) {
           const waited = Date.now() - started;

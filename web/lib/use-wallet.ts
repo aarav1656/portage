@@ -17,6 +17,7 @@ export interface WalletState {
   connect(w: DetectedWallet): Promise<void>;
   disconnect(): Promise<void>;
   signAndSend(transactionBase64: string, chain?: IdentifierString): Promise<string>;
+  signOnly(transactionBase64: string, chain?: IdentifierString): Promise<string>;
 }
 
 interface StandardConnectInput {
@@ -52,6 +53,13 @@ interface SolanaSignAndSendFeature {
   readonly signAndSendTransaction: (
     ...inputs: readonly SolanaSignAndSendInput[]
   ) => Promise<readonly SolanaSignAndSendOutput[]>;
+}
+
+interface SolanaSignTransactionFeature {
+  readonly version: "1.0.0";
+  readonly signTransaction: (
+    ...inputs: readonly SolanaSignAndSendInput[]
+  ) => Promise<readonly { readonly signedTransaction: Uint8Array }[]>;
 }
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -188,8 +196,32 @@ export function useWallet(): WalletState {
     [activeWallet, activeAccount, connected],
   );
 
+  /** Sign without sending; returns the signed transaction as base64 for the caller to broadcast. */
+  const signOnly = useCallback(
+    async (transactionBase64: string, chain: IdentifierString = "solana:devnet"): Promise<string> => {
+      if (activeWallet === null || activeAccount === null || connected === null) {
+        throw new Error("Connect a wallet first");
+      }
+      const feature = activeWallet.features["solana:signTransaction"] as unknown as
+        | SolanaSignTransactionFeature
+        | undefined;
+      if (!feature) throw new Error("Wallet does not support solana:signTransaction");
+      const outputs = await feature.signTransaction({
+        account: activeAccount,
+        chain,
+        transaction: base64ToBytes(transactionBase64),
+      });
+      const first = outputs[0];
+      if (!first) throw new Error("Wallet returned no signed transaction");
+      let bin = "";
+      first.signedTransaction.forEach((b) => (bin += String.fromCharCode(b)));
+      return btoa(bin);
+    },
+    [activeWallet, activeAccount, connected],
+  );
+
   return useMemo(
-    (): WalletState => ({ wallets: detected, connected, connecting, error, connect, disconnect, signAndSend }),
-    [detected, connected, connecting, error, connect, disconnect, signAndSend],
+    (): WalletState => ({ wallets: detected, connected, connecting, error, connect, disconnect, signAndSend, signOnly }),
+    [detected, connected, connecting, error, connect, disconnect, signAndSend, signOnly],
   );
 }
