@@ -117,6 +117,6 @@ export const unwrapIx = (
 ) => moveIx("unwrap", user, underlyingMint, amount, minOut, overrides, programId);
 
 export const PORTAGE_ERRORS = Object.fromEntries(idl.errors.map((e) => [e.name, e.code])) as Record<
-  "UnsupportedUnderlying" | "NothingReceived" | "InvariantViolated" | "BelowMinimum",
+  "UnsupportedUnderlying" | "NothingReceived" | "InvariantViolated" | "BelowMinimum" | "SelfTransfer",
   number
 >;

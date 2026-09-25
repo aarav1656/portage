@@ -5,6 +5,8 @@ vault, so a token that Meteora's Dynamic Bonding Curve program refuses to touch 
 used to quote a bonding-curve launch. The wrap and unwrap accounting, the DBC launch configurator,
 and the live proof of the rejection all run against mainnet state, not a mock.
 
+Documentation: [docs/README.md](docs/README.md)
+
 Live site: https://portage-sol.vercel.app
 
 ## The problem
@@ -85,7 +87,7 @@ DBC launch" (`/` with the token preselected) and "Launch on DBC" (`/launch`).
 
 | Check | Result |
 |---|---|
-| `packages/vault` test suite | 8/8 passing, run with `litesvm` against a fixture of the real mainnet tKalshi mint account, not a synthetic one |
+| `packages/vault` test suite | 10/10 passing, run with `litesvm` against a fixture of the real mainnet tKalshi mint account, not a synthetic one |
 | Wrap/unwrap round trip | Sending 1,234,567,891 base units mints 1,232,098,755 wrapped tokens (20 bps fee taken by Tessera), unwrapping all of it back returns 1,229,634,557, a total round-trip cost of 4,933,334 base units, about 40 bps, matching the 20 bps fee charged on each leg |
 | Invariant under load | 30 wrap/unwrap cycles with pseudo-random odd amounts across three users, `wrapped_mint.supply <= vault_token.amount` checked and held after every single instruction |
 | Live raw-quote simulation | `curl https://portage-sol.vercel.app/api/simulate?quote=raw` returns `"err":{"InstructionError":[0,{"Custom":6081}]}` with the real program log: `AnchorError thrown in programs/dynamic-bonding-curve/src/utils/token.rs:232... QuoteMintHasNonZeroTransferFee` |
@@ -120,7 +122,7 @@ Requires Node with pnpm, Rust 1.84+, and Anchor 0.32.1 (see `Anchor.toml` and
 ```bash
 pnpm install
 anchor build                                   # produces target/deploy/portage.so, needed by the vault tests
-(cd packages/vault && npx vitest run)          # 8 tests against the real tKalshi mint fixture
+(cd packages/vault && npx vitest run)          # 10 tests against the real tKalshi mint fixture
 (cd packages/dbc && pnpm sim green)            # dry-run a DBC launch quoted in a plain stand-in mint
 (cd packages/dbc && pnpm sim red)              # same call quoted in raw tKalshi, watch it fail with 6081
 (cd apps/web && pnpm dev)                      # web app on localhost:3000
@@ -152,9 +154,10 @@ the real error inline rather than a guessed price.
   every account passed to an instruction is checked against the vault's stored addresses
   (`has_one` constraints), which is what stops a substituted vault token account or a forged
   wrapped mint from passing.
-- **Program upgrade authority is undecided**, because the program has not been deployed yet. On
-  deploy it will default to the deploying wallet unless explicitly set otherwise or renounced;
-  whoever holds that key can push a new program binary to this address until it is renounced.
+- **The devnet program is immutable.** Its programdata account reads `authority: null` (devnet
+  slot 503856806), so nobody can replace the binary at this address; the deployed bytes hash the
+  same as `target/deploy/portage.so`. It is not deployed on mainnet yet. See
+  [docs/program/addresses.md](docs/program/addresses.md).
 - **Portage does not control Tessera's API or Meteora's program.** A Tessera outage degrades to a
   cached mark price; a change to Meteora's DBC program is outside Portage's control entirely.
 
