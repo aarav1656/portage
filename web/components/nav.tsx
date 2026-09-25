@@ -8,6 +8,7 @@ const ROUTES = [
   { href: "/market", label: "Market" },
   { href: "/launch", label: "Launch" },
   { href: "/devnet", label: "Devnet" },
+  { href: "/docs", label: "Docs" },
   { href: "/pitch", label: "Pitch" },
 ];
 
@@ -31,7 +32,7 @@ export function Nav(): React.ReactNode {
           </span>
           <nav aria-label="Primary" className="flex min-w-0 overflow-x-auto">
             {ROUTES.map((route) => {
-              const active = pathname === route.href;
+              const active = route.href === "/" ? pathname === "/" : pathname === route.href || pathname.startsWith(`${route.href}/`);
               return (
                 <Link
                   key={route.href}

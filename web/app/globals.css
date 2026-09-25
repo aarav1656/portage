@@ -59,6 +59,212 @@
 }
 
 @layer components {
+
+  /* Rendered docs/ markdown: a filed document, not a GitHub README. */
+  .doc-title code {
+    font-family: var(--font-mono);
+    font-size: 0.8em;
+  }
+
+  .doc-prose {
+    max-width: 46rem;
+    font-size: 0.9375rem;
+    line-height: 1.7;
+    color: var(--ink);
+    overflow-wrap: break-word;
+  }
+
+  .doc-prose > * + * {
+    margin-top: var(--space-sm);
+  }
+
+  .doc-prose h2,
+  .doc-prose h3,
+  .doc-prose h4 {
+    position: relative;
+    scroll-margin-top: var(--space-md);
+    line-height: 1.25;
+  }
+
+  .doc-prose h2 {
+    margin-top: var(--space-xl);
+    padding-top: var(--space-sm);
+    border-top: 1px solid var(--line-strong);
+    font-size: 1.75rem;
+  }
+
+  .doc-prose h3 {
+    margin-top: var(--space-lg);
+    font-size: 1.25rem;
+  }
+
+  .doc-prose h4 {
+    margin-top: var(--space-md);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .doc-anchor {
+    margin-right: 0.4em;
+    font-family: var(--font-mono);
+    font-size: 0.75em;
+    color: var(--ink-3);
+    text-decoration: none;
+  }
+
+  .doc-anchor:hover,
+  .doc-prose :target .doc-anchor {
+    color: var(--accent);
+  }
+
+  .doc-prose a:not(.doc-anchor) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+
+  .doc-prose a:not(.doc-anchor):hover {
+    text-decoration-color: var(--accent);
+  }
+
+  .doc-prose code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background-color: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 0.05em 0.3em;
+    overflow-wrap: anywhere;
+  }
+
+  .doc-prose h2 code,
+  .doc-prose h3 code {
+    background: none;
+    border: none;
+    padding: 0;
+  }
+
+  .doc-prose ul,
+  .doc-prose ol {
+    padding-left: 1.25rem;
+  }
+
+  .doc-prose ul {
+    list-style: square;
+  }
+
+  .doc-prose ol {
+    list-style: decimal;
+  }
+
+  .doc-prose li + li {
+    margin-top: var(--space-3xs);
+  }
+
+  .doc-prose li::marker {
+    color: var(--ink-3);
+  }
+
+  .doc-prose strong {
+    font-weight: 600;
+  }
+
+  .doc-prose blockquote {
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    background-color: var(--paper-2);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+
+  .doc-prose hr {
+    border: none;
+    border-top: 1px dashed var(--line-strong);
+    margin-block: var(--space-lg);
+  }
+
+  .doc-prose img {
+    max-width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .doc-code {
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    background-color: var(--ink);
+    color: var(--paper);
+    overflow: hidden;
+  }
+
+  .doc-code figcaption {
+    border-bottom: 1px solid color-mix(in srgb, var(--paper) 18%, transparent);
+    padding: var(--space-3xs) var(--space-xs);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: color-mix(in srgb, var(--paper) 60%, transparent);
+  }
+
+  .doc-code pre {
+    overflow-x: auto;
+    padding: var(--space-xs) var(--space-sm);
+    font-size: 0.8125rem;
+    line-height: 1.6;
+  }
+
+  .doc-code code {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: inherit;
+    color: inherit;
+    overflow-wrap: normal;
+  }
+
+  .doc-table {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  .doc-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+    line-height: 1.5;
+  }
+
+  .doc-table th {
+    background-color: var(--paper-2);
+    border-bottom: 1px solid var(--line-strong);
+    padding: var(--space-2xs) var(--space-xs);
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  .doc-table td {
+    border-bottom: 1px dashed var(--line);
+    padding: var(--space-2xs) var(--space-xs);
+    vertical-align: top;
+    min-width: 8rem;
+  }
+
+  .doc-table tr:last-child td {
+    border-bottom: none;
+  }
+
   .mono {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
