@@ -10,7 +10,14 @@ const root = join(web, "..");
 if (!existsSync(join(root, "docs"))) process.exit(0);
 
 // Only tracked files: ignored/private notes (WIN-CONDITIONS.md) never leave the repo root.
-const files = execFileSync("git", ["ls-files", "docs"], { cwd: root, encoding: "utf8" }).trim().split("\n").filter(Boolean);
+// Vercel builds from an upload with no .git; the committed copy is used as-is there.
+let files;
+try {
+  files = execFileSync("git", ["ls-files", "docs"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim().split("\n").filter(Boolean);
+} catch {
+  process.exit(0);
+}
+if (!files.length) process.exit(0);
 const md = join(web, "content/docs"), assets = join(web, "public/docs");
 rmSync(md, { recursive: true, force: true });
 rmSync(assets, { recursive: true, force: true });
