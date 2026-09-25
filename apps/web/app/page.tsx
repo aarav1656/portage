@@ -71,7 +71,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
           </div>
           <p className="mt-3 text-sm text-[var(--ink-2)]">
             Thrown by <code className="mono">dynamic-bonding-curve/utils/token.rs</code> the moment a quote mint carries a
-            Token-2022 transfer fee extension &mdash; both tKalshi and tOpenAI carry one right now, read live below. The
+            Token-2022 transfer fee extension: both tKalshi and tOpenAI carry one right now, read live below. The
             wrapped receipt is a plain legacy SPL mint with no extensions, so the same check clears it.
           </p>
           <div className="mt-auto flex flex-wrap gap-3 pt-5">
