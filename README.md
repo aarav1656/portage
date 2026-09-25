@@ -5,7 +5,7 @@ vault, so a token that Meteora's Dynamic Bonding Curve program refuses to touch 
 used to quote a bonding-curve launch. The wrap and unwrap accounting, the DBC launch configurator,
 and the live proof of the rejection all run against mainnet state, not a mock.
 
-Live site: https://portage-eta-ivory.vercel.app
+Live site: https://portage-sol.vercel.app
 
 ## The problem
 
@@ -53,16 +53,33 @@ fee, and migration to a DAMM v2 pool with all LP permanently locked and fees com
 quote token after graduation.
 
 The web app (`apps/web`) is the ledger for all of this: the home page shows the live rejection and
-a wrap/unwrap panel, `/launch` configures a DBC pool against the live curve code, `/vaults` reads
-vault and mint state straight from RPC, and `/proof` runs the same `createConfig` call live against
-both a raw tKalshi quote mint and a plain stand-in mint, side by side.
+a wrap/unwrap panel, `/launch` configures a DBC pool against the live curve code and can run that
+configuration through a real mainnet simulation before anything is deployed, `/vaults` reads vault
+and mint state straight from RPC, `/market` compares Tessera's mark price against the live DEX
+price for each wrapped token, and `/proof` runs the same `createConfig` call live against both a
+raw tKalshi quote mint and a plain stand-in mint, side by side.
+
+`/launch`'s simulate step calls `/api/launch-sim`, which builds the same `createConfig` plus
+`initializeVirtualPoolWithSplToken` transaction that a real launch would submit, anchored to the
+live Tessera mark price for tKalshi, and runs it through `simulateTransaction` on mainnet. It
+returns the real program logs, the compute units consumed, and the actual starting price implied
+by the requested market cap, so a launch can be checked before a single lamport moves.
+
+`/market` answers a narrower question: is the wrapped token worth launching against right now. For
+each of tKalshi and tOpenAI it reads the Tessera mark price (the same live number `/api/market`
+already serves, including the stale-cache fallback), the live Jupiter price v3 quote for the same
+mint, and the largest-liquidity pool for that mint from DexScreener. `premiumPct` is
+`(dexPrice / markPrice - 1) * 100`: positive means the DEX is paying more than the Tessera desk, a
+gap a wrap-and-launch can arbitrage. Each panel links its pool to Solscan and offers "Wrap for a
+DBC launch" (`/` with the token preselected) and "Launch on DBC" (`/launch`).
 
 ## Live links
 
-- Site: https://portage-eta-ivory.vercel.app
-- Live proof (red/green simulation): https://portage-eta-ivory.vercel.app/proof
-- Launch configurator: https://portage-eta-ivory.vercel.app/launch
-- Vault ledger: https://portage-eta-ivory.vercel.app/vaults
+- Site: https://portage-sol.vercel.app
+- Live proof (red/green simulation): https://portage-sol.vercel.app/proof
+- Launch configurator: https://portage-sol.vercel.app/launch
+- Vault ledger: https://portage-sol.vercel.app/vaults
+- Market (mark vs DEX): https://portage-sol.vercel.app/market
 
 ## Evidence
 
@@ -71,9 +88,11 @@ both a raw tKalshi quote mint and a plain stand-in mint, side by side.
 | `packages/vault` test suite | 8/8 passing, run with `litesvm` against a fixture of the real mainnet tKalshi mint account, not a synthetic one |
 | Wrap/unwrap round trip | Sending 1,234,567,891 base units mints 1,232,098,755 wrapped tokens (20 bps fee taken by Tessera), unwrapping all of it back returns 1,229,634,557, a total round-trip cost of 4,933,334 base units, about 40 bps, matching the 20 bps fee charged on each leg |
 | Invariant under load | 30 wrap/unwrap cycles with pseudo-random odd amounts across three users, `wrapped_mint.supply <= vault_token.amount` checked and held after every single instruction |
-| Live raw-quote simulation | `curl https://portage-eta-ivory.vercel.app/api/simulate?quote=raw` returns `"err":{"InstructionError":[0,{"Custom":6081}]}` with the real program log: `AnchorError thrown in programs/dynamic-bonding-curve/src/utils/token.rs:232... QuoteMintHasNonZeroTransferFee` |
-| Live wrapped-quote simulation | `curl https://portage-eta-ivory.vercel.app/api/simulate?quote=plain` returns `"err":null` with a full `createConfig` + `initializeVirtualPoolWithSplToken` log, 174,050 compute units consumed |
-| Live transfer fee | `curl https://portage-eta-ivory.vercel.app/api/market` returns `transferFeeBps: 20` for both tKalshi and tOpenAI, read from each mint's current epoch fee schedule, not cached |
+| Live raw-quote simulation | `curl https://portage-sol.vercel.app/api/simulate?quote=raw` returns `"err":{"InstructionError":[0,{"Custom":6081}]}` with the real program log: `AnchorError thrown in programs/dynamic-bonding-curve/src/utils/token.rs:232... QuoteMintHasNonZeroTransferFee` |
+| Live wrapped-quote simulation | `curl https://portage-sol.vercel.app/api/simulate?quote=plain` returns `"err":null` with a full `createConfig` + `initializeVirtualPoolWithSplToken` log, 174,050 compute units consumed |
+| Live transfer fee | `curl https://portage-sol.vercel.app/api/market` returns `transferFeeBps: 20` for both tKalshi and tOpenAI, read from each mint's current epoch fee schedule, not cached |
+| Live launch simulation | `node apps/web/check-launch.mjs` (2026-09-25) called `/api/launch-sim?name=Test&symbol=TST&supply=1000000000&startMcapUsd=50000`, got `err: null` back from mainnet `simulateTransaction`, more than 3 real program log lines, a starting price anchored to the live tKalshi mark (413.8 at that run), and an implied start market cap within 5% of the requested $50,000 |
+| Live mark vs DEX premium | `node apps/web/check-market.mjs` (2026-09-25) read `/api/tmarket` and found tKalshi trading at a 7.82% premium to the Tessera mark and tOpenAI at a 28.02% premium, both computed as `(dexPrice / markPrice - 1) * 100` from the live Jupiter price v3 quote against the same live Tessera mark `/api/market` serves |
 
 Both simulation checks above were re-run against the live deployment while writing this document
 and matched the numbers shown.
@@ -110,7 +129,12 @@ anchor build                                   # produces target/deploy/portage.
 `apps/web` talks to `api.mainnet-beta.solana.com` by default; set `SOLANA_RPC_URL` to use your own
 RPC. Tessera's mark price falls back to a bundled snapshot plus an OS-tmp-dir cache if
 `rest-api.tessera.pe` is unreachable, so the UI still renders during a Tessera outage, marked
-stale with the timestamp of the last good read.
+stale with the timestamp of the last good read. `fetchMarketSnapshot` in `apps/web/lib/market.ts`
+is the single place this fallback lives; the home page, `/launch`, and `/market` all read through
+it, so a Tessera outage surfaces the same "(stale)" label and last-good timestamp everywhere the
+mark price is shown instead of failing silently or freezing on a wrong number. Only the DEX side of
+`/market` (Jupiter price v3, DexScreener) has no fallback: if either is unreachable, `/market` shows
+the real error inline rather than a guessed price.
 
 ## Security model and limits
 

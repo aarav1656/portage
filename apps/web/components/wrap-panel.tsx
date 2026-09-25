@@ -11,8 +11,16 @@ import type { WalletState } from "@/lib/use-wallet";
 type Mode = "wrap" | "unwrap";
 type Phase = "idle" | "building" | "awaiting-signature" | "submitting" | "done" | "error";
 
-export function WrapPanel({ market, marketError }: { market: MarketSnapshot | null; marketError: string | null }) {
-  const [token, setToken] = useState<TesseraKey>("Kalshi");
+export function WrapPanel({
+  market,
+  marketError,
+  initialToken = "Kalshi",
+}: {
+  market: MarketSnapshot | null;
+  marketError: string | null;
+  initialToken?: TesseraKey;
+}) {
+  const [token, setToken] = useState<TesseraKey>(initialToken);
   const [mode, setMode] = useState<Mode>("wrap");
   const [amount, setAmount] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");

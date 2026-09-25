@@ -1,11 +1,13 @@
 import { fetchMarketSnapshot } from "@/lib/market";
-import { TESSERA_TOKENS } from "@/lib/tessera";
+import { TESSERA_TOKENS, isTesseraKey, type TesseraKey } from "@/lib/tessera";
 import { formatBps } from "@/lib/format";
 import { AddressLink } from "@/components/address-link";
 import { Stamp } from "@/components/stamp";
 import { WrapPanel } from "@/components/wrap-panel";
 
-export default async function HomePage() {
+export default async function HomePage({ searchParams }: { searchParams: Promise<{ token?: string }> }) {
+  const { token: tokenParam } = await searchParams;
+  const initialToken: TesseraKey = isTesseraKey(tokenParam ?? "") ? (tokenParam as TesseraKey) : "Kalshi";
   let market = null as Awaited<ReturnType<typeof fetchMarketSnapshot>> | null;
   let marketError: string | null = null;
   try {
@@ -62,7 +64,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      <WrapPanel market={market} marketError={marketError} />
+      <WrapPanel market={market} marketError={marketError} initialToken={initialToken} />
     </div>
   );
 }
