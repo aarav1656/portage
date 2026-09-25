@@ -1,5 +1,5 @@
 .env
 .env.*
-docs/
+/docs/
 .progress/
 target/
