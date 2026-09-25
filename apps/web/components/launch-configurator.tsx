@@ -5,6 +5,7 @@ import { buildLaunchPreview, LAUNCH_TOTAL_SUPPLY } from "@/lib/curve";
 import { formatUsd } from "@/lib/format";
 import { CurveChart } from "@/components/curve-chart";
 import { FeeSchedule } from "@/components/fee-schedule";
+import { LaunchSimPanel } from "@/components/launch-sim-panel";
 
 export interface QuoteInfo {
   markPrice: number;
@@ -134,6 +135,13 @@ export function LaunchConfigurator({
             </div>
           )}
         </section>
+
+        <LaunchSimPanel
+          name={name}
+          symbol={symbol}
+          supply={LAUNCH_TOTAL_SUPPLY}
+          startMcapUsd={Number(startUsd)}
+        />
       </div>
     </div>
   );
