@@ -8,6 +8,7 @@
   "exports": { ".": "./src/index.ts" },
   "scripts": {
     "sim": "tsx src/sim.ts",
+    "fund-devnet": "tsx src/fund-devnet.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

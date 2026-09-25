@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Domine, IBM_Plex_Mono, Work_Sans } from "next/font/google";
 import { Nav } from "@/components/nav";
+import { PORTAGE_PROGRAM_ID } from "@portage/vault";
 import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
@@ -36,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <Nav />
         <main className="mx-auto max-w-[1320px] px-4 pb-20 sm:px-6 lg:px-10">{children}</main>
-        <SiteFooter />
+        <SiteFooter programId={PORTAGE_PROGRAM_ID.toBase58()} />
       </body>
     </html>
   );

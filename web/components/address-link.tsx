@@ -1,9 +1,22 @@
 import { ArrowSquareOut } from "@phosphor-icons/react/dist/ssr";
 import { shortAddress } from "@/lib/format";
 
-/** Shortened address or tx signature, linking to Solscan, full value in the title. */
-export function AddressLink({ value, kind = "account" }: { value: string; kind?: "account" | "tx" }) {
-  const href = kind === "tx" ? `https://solscan.io/tx/${value}` : `https://solscan.io/account/${value}`;
+/** Shortened address or tx signature, full value in the title. Solscan on mainnet, Solana Explorer on devnet. */
+export function AddressLink({
+  value,
+  kind = "account",
+  cluster,
+}: {
+  value: string;
+  kind?: "account" | "tx";
+  cluster?: "devnet";
+}) {
+  const href =
+    cluster === "devnet"
+      ? `https://explorer.solana.com/${kind === "tx" ? "tx" : "address"}/${value}?cluster=devnet`
+      : kind === "tx"
+        ? `https://solscan.io/tx/${value}`
+        : `https://solscan.io/account/${value}`;
   return (
     <a
       href={href}

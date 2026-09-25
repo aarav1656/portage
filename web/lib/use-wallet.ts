@@ -16,7 +16,7 @@ export interface WalletState {
   error: string | null;
   connect(w: DetectedWallet): Promise<void>;
   disconnect(): Promise<void>;
-  signAndSend(transactionBase64: string): Promise<string>;
+  signAndSend(transactionBase64: string, chain?: IdentifierString): Promise<string>;
 }
 
 interface StandardConnectInput {
@@ -103,7 +103,7 @@ function toDetected(wallet: Wallet): DetectedWallet {
   return { name: wallet.name, icon: wallet.icon, handle: wallet };
 }
 
-/** Wallet-standard connect + sign-and-send, scoped to Solana mainnet. */
+/** Wallet-standard connect + sign-and-send. Mainnet unless the caller passes another chain. */
 export function useWallet(): WalletState {
   const [detected, setDetected] = useState<DetectedWallet[]>([]);
   const [connected, setConnected] = useState<{ name: string; address: string } | null>(null);
@@ -167,7 +167,7 @@ export function useWallet(): WalletState {
   }, [activeWallet]);
 
   const signAndSend = useCallback(
-    async (transactionBase64: string): Promise<string> => {
+    async (transactionBase64: string, chain: IdentifierString = "solana:mainnet"): Promise<string> => {
       if (activeWallet === null || activeAccount === null || connected === null) {
         throw new Error("Connect a wallet first");
       }
@@ -178,7 +178,7 @@ export function useWallet(): WalletState {
       const transaction = base64ToBytes(transactionBase64);
       const outputs = await feature.signAndSendTransaction({
         account: activeAccount,
-        chain: "solana:mainnet",
+        chain,
         transaction,
       });
       const first = outputs[0];

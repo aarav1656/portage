@@ -7,6 +7,7 @@ const ROUTES = [
   { href: "/vaults", label: "Vaults" },
   { href: "/market", label: "Market" },
   { href: "/launch", label: "Launch" },
+  { href: "/devnet", label: "Devnet" },
   { href: "/pitch", label: "Pitch" },
 ];
 
@@ -26,7 +27,7 @@ export function Nav(): React.ReactNode {
         <div className="flex items-end gap-4">
           <span className="mono hidden items-center gap-1.5 pb-[1.1rem] text-[0.6875rem] uppercase tracking-widest text-[var(--ink-3)] md:inline-flex">
             <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
-            Mainnet-beta
+            {pathname === "/devnet" ? "Devnet" : "Mainnet-beta"}
           </span>
           <nav aria-label="Primary" className="flex">
             {ROUTES.map((route) => {
