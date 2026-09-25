@@ -7,6 +7,23 @@ import { PublicKey } from "@solana/web3.js";
 import { fetchMarketSnapshot, type MarketSnapshot } from "@/lib/market";
 import { connection } from "@/lib/rpc";
 import { formatUsd, shortAddress } from "@/lib/format";
+import { ArticleLine, Exhibit, TweetCard, type Article, type Tweet } from "@/components/evidence";
+import dbcTokenRs from "@/public/evidence/dbc-token-rs.webp";
+import meteoraDocsBadge from "@/public/evidence/meteora-docs-badge.webp";
+import meteoraDbcConfig from "@/public/evidence/meteora-dbc-config.webp";
+import tesseraExplore from "@/public/evidence/tessera-explore.webp";
+import tesseraDocsFee from "@/public/evidence/tessera-docs-fee.webp";
+import explorerTkalshi from "@/public/evidence/explorer-tkalshi.webp";
+import solscanTkalshi from "@/public/evidence/solscan-tkalshi.webp";
+import dexWash from "@/public/evidence/dex-wash.webp";
+import devnetProgram from "@/public/evidence/devnet-program.webp";
+import devnetWrap from "@/public/evidence/devnet-wrap.webp";
+import devnetReject from "@/public/evidence/devnet-reject.webp";
+import xMeteoraVideo from "@/public/evidence/x-meteora-dbc-video.webp";
+import avMeteoraAG from "@/public/evidence/avatars/MeteoraAG.webp";
+import avMeteoraEco from "@/public/evidence/avatars/MeteoraEco.webp";
+import avTessera from "@/public/evidence/avatars/Tessera_PE.webp";
+import avIndexbank from "@/public/evidence/avatars/indexbankfun.webp";
 
 // The fee and mark figures are read from mainnet and Tessera on every request.
 export const dynamic = "force-dynamic";
@@ -33,21 +50,118 @@ const DEVNET_RUN: { step: string; what: string; sig: string; result: string; fai
   { step: "8", what: "Set upgrade authority to none", sig: "3xxKiV2Gs5UXxb9nztEXRMDGkQSXWC3fsUx79HiEbzY479piYAdVotn65RZKQD6wGCAZqwpkiD24nFy8t9TcopKz", result: "Program immutable" },
 ];
 
+// api.dexscreener.com/token-pairs/v1/solana/<tKalshi>, pairs quoted in tKalshi, read 2026-09-25 07:08 UTC.
 const RAYDIUM_PAIRS: [string, string, string][] = [
-  ["WASH/tKalshi", "$4,234", "0 buys, 0 sells in 6h"],
-  ["YES/tKalshi", "$40,268", "3 buys, 7 sells in 24h"],
-  ["BET/tKalshi", "$27,184", "down almost 16% in 24h"],
-  ["DOGINU/tKalshi", "$30,776", "most active of the four"],
+  ["WASH/tKalshi", "$4,241", "1 buy, 4 sells, $4.56 volume in 24h"],
+  ["BET/tKalshi", "$26,138", "6 buys, 9 sells in 24h, down 6.9%"],
+  ["YES/tKalshi", "$36,348", "4 buys, 11 sells in 24h, down 19.3%"],
+  ["DOGINU/tKalshi", "$31,091", "48 buys, 49 sells in 24h, the most active"],
+];
+
+// Each fetched with curl -s https://api.fxtwitter.com/<user>/status/<id> on 2026-09-25; text is verbatim.
+const METEORA_TWEETS: Tweet[] = [
+  {
+    url: "https://x.com/MeteoraAG/status/2097559327855034437",
+    name: "Meteora",
+    handle: "MeteoraAG",
+    date: "Sep 9, 2026",
+    avatar: avMeteoraAG,
+    text: "Meteora DBC now supports any token pair on @solana.\n\nStock tokens, RWAs, and other Token-2022 assets can now be used as quote tokens in DBC launch configurations.\n\nIf it\u2019s on Solana, you can launch it on Meteora.",
+    media: { src: xMeteoraVideo, alt: "Frame from the attached video: Any token. Any pair." },
+  },
+  {
+    url: "https://x.com/MeteoraEco/status/2098687815534199216",
+    name: "Meteora Ecosystem",
+    handle: "MeteoraEco",
+    date: "Sep 12, 2026",
+    avatar: avMeteoraEco,
+    text: "Meteora DBC unlocks permissionless launches on Solana.\n\nBuilders can create launchpads and entirely new products using stock tokens and other assets as quote pairs.",
+    excerpt: true,
+    quote: {
+      title: "What Meteora DBC Release 0.2.1 means for Builders on Solana",
+      text: "Non-zero transfer fee is never allowed, badge or not. The program re-checks this at badge creation, at config/pool creation, and on every instruction that moves quote tokens. It is a hard invariant.",
+    },
+  },
+];
+
+const RECORD_TWEETS: Tweet[] = [
+  {
+    url: "https://x.com/Tessera_PE/status/2021875468979613877",
+    name: "Tessera Lab",
+    handle: "Tessera_PE",
+    date: "Feb 12, 2026",
+    avatar: avTessera,
+    text: "SpaceX is now live on Solana\n\nTSPXcLV76s6V2zDiZQ18kBfcbnjaE2ZzNT3ga2Pd99v",
+  },
+  {
+    url: "https://x.com/Tessera_PE/status/2098458415055987070",
+    name: "Tessera Lab",
+    handle: "Tessera_PE",
+    date: "Sep 11, 2026",
+    avatar: avTessera,
+    text: "Considering some big changes this next week for you trenchers out there\n\nIf you trade T assets, or @LaunchOnSF tessera pairings, what do you most want to see from us?",
+  },
+  {
+    url: "https://x.com/Tessera_PE/status/2064002699129929854",
+    name: "Tessera Lab",
+    handle: "Tessera_PE",
+    date: "Jun 8, 2026",
+    avatar: avTessera,
+    text: "Tessera is Launching OpenAI June 24\n\nYou have 2 weeks to become eligible https://app.tessera.pe/auction/T-OpenAI",
+    excerpt: true,
+  },
+  {
+    url: "https://x.com/indexbankfun/status/2058204698646020322",
+    name: "Indexbank",
+    handle: "indexbankfun",
+    date: "May 23, 2026",
+    avatar: avIndexbank,
+    text: "[...] one xStock (PGX) whose Token-2022 mint refuses every swap aggregator we tried. [...]\n\n3. PGX removed. Until the mint authority drops the permanent delegate, we can't route it.",
+    excerpt: true,
+  },
+];
+
+const ARTICLES: Article[] = [
+  {
+    outlet: "Meteora Docs",
+    title: "DBC Token 2022 Support",
+    date: "read 2026-09-25",
+    href: "https://docs.meteora.ag/core-products/dbc/token-2022-support",
+    quote: "A badge does not allow a non-zero transfer fee. Current and any scheduled transfer_fee_basis_points must be 0.",
+  },
+  {
+    outlet: "Meteora Docs",
+    title: "DBC Launch Configuration",
+    date: "read 2026-09-25",
+    href: "https://docs.meteora.ag/core-products/dbc/launch-configurations",
+    quote: "Token 2022 quote mints are permissionless only with metadata-related extensions and a zero transfer fee.",
+  },
+  {
+    outlet: "Tessera Documentation",
+    title: "How do T-Tokens Work?",
+    date: "updated 2026-08-13",
+    href: "https://docs.tessera.pe/overview/how-do-tessera-token-work",
+    quote: "A 0% fee applies on acquisitions, and a 0.2% fee applies on sells/transfers.",
+  },
+  {
+    outlet: "Raydium Docs",
+    title: "Token-2022 transfer fees in swaps",
+    date: "read 2026-09-25",
+    href: "https://docs.raydium.io/algorithms/token-2022-transfer-fees",
+    quote: "If the swap program is naive and uses the raw amount_in argument, the invariant check fails because the vault got less than the program thinks.",
+  },
 ];
 
 const SLIDES = [
   "Cover",
   "The border",
+  "Any pair, but",
   "Who hits it",
   "The fix",
   "Live proof",
   "Devnet run",
-  "Evidence",
+  "Accounting",
+  "The record",
   "Launch",
   "Why Solana",
   "Status",
@@ -123,28 +237,46 @@ export default async function PitchPage() {
       </Slide>
 
       <Slide n={1}>
-        <H>
-          DBC rejects any quote mint with a transfer fee, before it even looks for a badge.
-        </H>
+        <H>DBC rejects any quote mint with a transfer fee, badge or not.</H>
         <p className="mono mt-8 break-all text-lg text-[var(--rejected)] sm:text-2xl">
           6081 QuoteMintHasNonZeroTransferFee
         </p>
         <p className="mono mt-2 text-xs text-[var(--ink-3)]">dynamic-bonding-curve/src/utils/token.rs, is_supported_quote_mint</p>
-        <div className="mt-10 grid gap-10 lg:grid-cols-[1fr_1.4fr]">
-          <dl>
-            <Row label="tKalshi fee, this request">{fee("tKalshi")}</Row>
-            <Row label="tOpenAI fee, this request">{fee("tOpenAI")}</Row>
-            {market && (
-              <Row label={`tKalshi Tessera mark${market.tKalshi.stale ? " (stale)" : ""}`}>
-                {formatUsd(market.tKalshi.markPrice)}
-              </Row>
-            )}
-          </dl>
-          <p className="max-w-xl text-pretty text-sm text-[var(--ink-2)]">
-            Both figures come from each mint&apos;s current-epoch fee schedule, read on this page load, the same read{" "}
-            <span className="mono">/api/market</span> serves. The check runs again on swap, fee claim and migration, so no
-            config tweak gets a fee-bearing Token-2022 mint through.
-          </p>
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
+          <div className="grid gap-6 lg:col-span-7">
+            <Exhibit
+              no="01"
+              src={dbcTokenRs}
+              alt="Meteora dynamic-bonding-curve token.rs lines 195 to 226: require is_transfer_fee_zero, else PoolError::QuoteMintHasNonZeroTransferFee"
+              href="https://github.com/MeteoraAg/dynamic-bonding-curve/blob/f552f20aa3c1c7631427c3827aeea7c58b902813/programs/dynamic-bonding-curve/src/utils/token.rs#L201-L221"
+              note="Meteora's own source, pinned at commit f552f20. Line 217: never allow a non-zero transfer fee."
+              sizes="(min-width: 1024px) 58vw, 100vw"
+            />
+            <p className="max-w-2xl text-pretty text-sm text-[var(--ink-2)]">
+              Both fees come from each mint&apos;s current-epoch fee schedule, read on this page load, the same read{" "}
+              <span className="mono">/api/market</span> serves. The check runs again on swap, fee claim and migration, so no
+              config tweak gets a fee-bearing Token-2022 mint through.
+            </p>
+          </div>
+          <div className="grid gap-6 lg:col-span-5">
+            <Exhibit
+              no="02"
+              src={meteoraDocsBadge}
+              alt="Meteora docs, DBC Token 2022 Support: a badge does not allow a non-zero transfer fee"
+              href="https://docs.meteora.ag/core-products/dbc/token-2022-support"
+              note="Meteora's docs: a token badge cannot waive the fee rule."
+              sizes="(min-width: 1024px) 40vw, 100vw"
+            />
+            <dl>
+              <Row label="tKalshi fee, this request">{fee("tKalshi")}</Row>
+              <Row label="tOpenAI fee, this request">{fee("tOpenAI")}</Row>
+              {market && (
+                <Row label={`tKalshi Tessera mark${market.tKalshi.stale ? " (stale)" : ""}`}>
+                  {formatUsd(market.tKalshi.markPrice)}
+                </Row>
+              )}
+            </dl>
+          </div>
         </div>
         {marketError && (
           <p className="mt-6 text-sm text-[var(--rejected)]">Could not read live market data: {marketError}</p>
@@ -152,21 +284,94 @@ export default async function PitchPage() {
       </Slide>
 
       <Slide n={2}>
-        <H>So every tKalshi-quoted memecoin lands on Raydium, thin and with no floor.</H>
-        <dl className="mt-10 max-w-3xl">
-          {RAYDIUM_PAIRS.map(([pair, liq, activity]) => (
-            <Row key={pair} label={<span className="mono text-[var(--ink)]">{pair}</span>}>
-              {liq} liquidity &middot; {activity}
-            </Row>
-          ))}
-        </dl>
-        <p className="mono mt-4 text-xs text-[var(--ink-3)]">
-          DexScreener snapshot, 2026-09-24. Not re-pulled; liquidity moves by the minute.
-        </p>
-        <Lede>One real exit clears any of these books, and none carries recourse if the launch never graduates.</Lede>
+        <H>On Sep 9 Meteora opened DBC to stock tokens. The same release keeps fee-bearing ones out.</H>
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
+          <TweetCard t={METEORA_TWEETS[0]} className="lg:col-span-4" />
+          <TweetCard t={METEORA_TWEETS[1]} className="lg:col-span-4 lg:mt-12" />
+          <Exhibit
+            no="03"
+            className="lg:col-span-4 lg:mt-4"
+            src={meteoraDbcConfig}
+            alt="Meteora launch app, Configure DBC form, with the tKalshi mint pasted into the Quote Mint field"
+            href="https://launch.meteora.ag/"
+            note="Meteora's launch app with the tKalshi mint pasted as Quote Mint. The form takes the address; the program check in Exhibit 01 is what refuses it."
+            sizes="(min-width: 1024px) 33vw, 100vw"
+          />
+        </div>
+        <Lede>Tessera&apos;s T-tokens carry a 0.2% transfer fee (Exhibit 07), so the door Meteora opened stays shut for them.</Lede>
       </Slide>
 
       <Slide n={3}>
+        <H>Tessera&apos;s tKalshi is real, trading, and fee-bearing on every transfer.</H>
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
+          <div className="grid gap-6 lg:col-span-7">
+            <Exhibit
+              no="04"
+              src={tesseraExplore}
+              alt="Tessera app Explore page listing SpaceX, Kalshi and OpenAI tokens with auction prices"
+              href="https://app.tessera.pe/"
+              note="Tessera's app lists T-SpaceX, T-Kalshi and T-OpenAI (terms dialog closed for the capture)."
+              sizes="(min-width: 1024px) 58vw, 100vw"
+            />
+            <Exhibit
+              no="05"
+              src={solscanTkalshi}
+              alt="Solscan token page for T-Kalshi: Token 2022 Program owner, 2,841 holders, token extensions true"
+              href={`https://solscan.io/token/${TKALSHI}`}
+              note="Solscan: owned by the Token 2022 program, 2,841 holders at capture."
+              sizes="(min-width: 1024px) 58vw, 100vw"
+            />
+          </div>
+          <div className="grid gap-6 lg:col-span-5">
+            <Exhibit
+              no="06"
+              src={explorerTkalshi}
+              alt="Solana Explorer, T-Kalshi Token-2022 mint, Transfer Fee Config enabled, current fee rate 0.2 percent"
+              href={`https://explorer.solana.com/address/${TKALSHI}/token-extensions`}
+              note="Solana Explorer: transferFeeConfig enabled, current fee rate 0.2%, no practical maximum."
+              sizes="(min-width: 1024px) 40vw, 100vw"
+            />
+            <Exhibit
+              no="07"
+              src={tesseraDocsFee}
+              alt="Tessera documentation: a 0.2% fee applies on sells and transfers"
+              href="https://docs.tessera.pe/overview/how-do-tessera-token-work"
+              note="Tessera's docs state the same 0.2% on sells and transfers."
+              sizes="(min-width: 1024px) 40vw, 100vw"
+            />
+          </div>
+        </div>
+
+        <h3 className="mt-16 max-w-3xl text-balance text-2xl leading-snug sm:text-3xl">
+          So every tKalshi-quoted memecoin lands on a plain Raydium pool, thin and with no curve.
+        </h3>
+        <div className="mt-8 grid items-start gap-8 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <dl>
+              {RAYDIUM_PAIRS.map(([pair, liq, activity]) => (
+                <Row key={pair} label={<span className="mono text-[var(--ink)]">{pair}</span>}>
+                  {liq} liquidity &middot; {activity}
+                </Row>
+              ))}
+            </dl>
+            <p className="mono mt-4 break-all text-xs text-[var(--ink-3)]">
+              api.dexscreener.com/token-pairs/v1/solana/{shortAddress(TKALSHI)}, read 2026-09-25 07:08 UTC. Liquidity moves by the minute.
+            </p>
+            <Lede>One real exit clears any of these books, and none carries recourse if the launch never graduates.</Lede>
+          </div>
+          <Exhibit
+            no="08"
+            className="max-w-sm lg:col-span-4"
+            src={dexWash}
+            alt="DEX Screener panel for WASH/tKalshi on Raydium CPMM: liquidity 4.2K dollars, 5 transactions and 4 dollars volume in 24 hours"
+            href="https://dexscreener.com/solana/dgmueamprmzjzkuzsxz5snpfgfv5kwuyalrevsxabjqt"
+            note="WASH/tKalshi on Raydium CPMM: $4 of volume in a day."
+            sizes="(min-width: 1024px) 25vw, 100vw"
+          />
+        </div>
+      </Slide>
+
+      <Slide n={4}>
         <H>The fee lives on the token being wrapped, not on the token DBC reads.</H>
         <ol className="mt-10 max-w-3xl border-t border-[var(--line-strong)]">
           {[
@@ -188,7 +393,7 @@ export default async function PitchPage() {
         </Lede>
       </Slide>
 
-      <Slide n={4}>
+      <Slide n={5}>
         <H>Same createConfig call, simulated live on mainnet. Only the quote mint differs.</H>
         <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_1fr]">
           <div className="border-t-2 border-[var(--rejected)] pt-4">
@@ -210,7 +415,7 @@ export default async function PitchPage() {
         </p>
       </Slide>
 
-      <Slide n={5}>
+      <Slide n={6}>
         <H>On devnet the whole loop has already run for real.</H>
         <p className="mt-4 max-w-2xl text-sm text-[var(--ink-2)]">
           tKalshi does not exist on devnet, so the run uses a Token-2022 replica with the same shape. Program{" "}
@@ -246,9 +451,38 @@ export default async function PitchPage() {
           badge check, instead of 6081. Either way a raw fee-bearing mint cannot quote DBC. After the run the wrapped supply
           is 89.8 and the vault holds 89.8.
         </p>
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-12">
+          <Exhibit
+            no="09"
+            className="lg:col-span-5"
+            src={devnetProgram}
+            alt="Solana Explorer devnet, Portage program account: executable yes, upgradeable no, last deployed slot 503,782,830"
+            href={devnet("address", PROGRAM)}
+            note="The program on devnet: executable, upgradeable No."
+            sizes="(min-width: 1024px) 40vw, 100vw"
+          />
+          <div className="grid gap-6 lg:col-span-7">
+            <Exhibit
+              no="10"
+              src={devnetReject}
+              alt="Devnet transaction logs: DynamicBondingCurve CreateConfig, AnchorError InvalidTokenBadge, error number 6080"
+              href={devnet("tx", DEVNET_RUN[2].sig)}
+              note="Step 3, raw replica as quote: DBC refuses it on chain."
+              sizes="(min-width: 1024px) 58vw, 100vw"
+            />
+            <Exhibit
+              no="11"
+              src={devnetWrap}
+              alt="Devnet wrap transaction token balances: minus 100 replica from the wallet, plus 99.8 into the vault, plus 99.8 wrapped minted"
+              href={devnet("tx", DEVNET_RUN[3].sig)}
+              note="Step 4, wrap: 100 replica leaves the wallet, 99.8 lands in the vault, exactly 99.8 wrapped is minted."
+              sizes="(min-width: 1024px) 58vw, 100vw"
+            />
+          </div>
+        </div>
       </Slide>
 
-      <Slide n={6}>
+      <Slide n={7}>
         <H>The accounting holds under load, against the real tKalshi mint account.</H>
         <dl className="mt-10 max-w-3xl">
           <Row label="Vault test suite (litesvm, real mainnet tKalshi fixture)">8/8 passing</Row>
@@ -260,7 +494,25 @@ export default async function PitchPage() {
         </dl>
       </Slide>
 
-      <Slide n={7}>
+      <Slide n={8}>
+        <H>The record: people launching against Tessera pairs, and builders hitting Token-2022 walls.</H>
+        <div className="mt-10 grid items-start gap-6 md:grid-cols-2 lg:grid-cols-12">
+          <TweetCard t={RECORD_TWEETS[0]} className="lg:col-span-3" />
+          <TweetCard t={RECORD_TWEETS[1]} className="lg:col-span-5 lg:mt-10" />
+          <TweetCard t={RECORD_TWEETS[3]} className="md:col-span-2 lg:col-span-4 lg:mt-3" />
+          <TweetCard t={RECORD_TWEETS[2]} className="md:col-span-2 lg:col-span-4 lg:mt-2" />
+          <div className="md:col-span-2 lg:col-span-8 lg:mt-6">
+            <h3 className="mono text-xs uppercase tracking-widest text-[var(--ink-3)]">Written down elsewhere</h3>
+            <ol className="mt-2 border-t border-[var(--line-strong)]">
+              {ARTICLES.map((a) => (
+                <ArticleLine key={a.href} a={a} />
+              ))}
+            </ol>
+          </div>
+        </div>
+      </Slide>
+
+      <Slide n={9}>
         <H>A launch configured against the live curve, simulated before a lamport moves.</H>
         <dl className="mt-10 max-w-3xl">
           <Row label="Anti-snipe fee">2,500 bps to 100 bps over 300 s</Row>
@@ -278,7 +530,7 @@ export default async function PitchPage() {
         </p>
       </Slide>
 
-      <Slide n={8}>
+      <Slide n={10}>
         <H>One program-owned account holds a fee-bearing token and mints a second one with its own extension set.</H>
         <Lede>
           That is why this is Solana-specific: Token-2022 extensions live per mint, so the vault can custody the fee-bearing
@@ -291,7 +543,7 @@ export default async function PitchPage() {
         </dl>
       </Slide>
 
-      <Slide n={9}>
+      <Slide n={11}>
         <div className="flex flex-wrap items-start justify-between gap-6">
           <H>Mainnet deploy is the next step, not a done one.</H>
           <Stamp variant="pending">Mainnet pending</Stamp>
@@ -308,7 +560,7 @@ export default async function PitchPage() {
         </Lede>
       </Slide>
 
-      <Slide n={10}>
+      <Slide n={12}>
         <H>Portage</H>
         <dl className="mt-10 max-w-3xl">
           <Row label="Live site">

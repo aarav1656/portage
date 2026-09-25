@@ -24,12 +24,12 @@ export function Nav(): React.ReactNode {
             Bonded manifest for wtKALSHI
           </span>
         </div>
-        <div className="flex items-end gap-4">
+        <div className="flex min-w-0 max-w-full items-end gap-4">
           <span className="mono hidden items-center gap-1.5 pb-[1.1rem] text-[0.6875rem] uppercase tracking-widest text-[var(--ink-3)] md:inline-flex">
             <span aria-hidden="true" className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
             {pathname === "/devnet" ? "Devnet" : "Mainnet-beta"}
           </span>
-          <nav aria-label="Primary" className="flex">
+          <nav aria-label="Primary" className="flex min-w-0 overflow-x-auto">
             {ROUTES.map((route) => {
               const active = pathname === route.href;
               return (
