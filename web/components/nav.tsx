@@ -7,13 +7,14 @@ const ROUTES = [
   { href: "/vaults", label: "Vaults" },
   { href: "/market", label: "Market" },
   { href: "/launch", label: "Launch" },
+  { href: "/pitch", label: "Pitch" },
 ];
 
 export function Nav(): React.ReactNode {
   const pathname = usePathname();
   return (
     <header className="border-b border-[var(--line)] bg-[var(--paper)]">
-      <div className="mx-auto flex max-w-[1320px] items-end justify-between gap-4 px-4 sm:px-6 lg:px-10">
+      <div className="mx-auto flex max-w-[1320px] flex-wrap items-end justify-between gap-x-4 px-4 sm:px-6 lg:px-10">
         <div className="flex items-end gap-4">
           <Link href="/" className="py-4 font-[family-name:var(--font-display)] text-xl tracking-tight text-[var(--ink)]">
             Portage
@@ -35,7 +36,7 @@ export function Nav(): React.ReactNode {
                   key={route.href}
                   href={route.href}
                   aria-current={active ? "page" : undefined}
-                  className={`mono border-t border-l border-r border-[var(--line)] px-3 py-2 text-xs uppercase tracking-widest transition-colors sm:px-4 ${
+                  className={`mono border-t border-l border-r border-[var(--line)] px-2 py-2 text-xs uppercase tracking-wider transition-colors sm:px-4 sm:tracking-widest ${
                     active
                       ? "border-b-2 border-b-[var(--accent)] bg-[var(--paper-2)] text-[var(--ink)]"
                       : "text-[var(--ink-3)] hover:text-[var(--ink)]"
