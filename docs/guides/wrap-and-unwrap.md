@@ -12,7 +12,9 @@ The wrap panel is on the home page (`web/app/page.tsx`, `web/components/wrap-pan
 2. Pick the token and Wrap or Unwrap, enter an amount. The panel shows the fee at the live rate and the minimum it will pass on chain, computed by `quoteMinimum` in `web/lib/fee.ts` (live fee minus a 10 bps tolerance).
 3. Submit. The browser posts to `/api/wrap` or `/api/unwrap`, receives an unsigned transaction, and hands it to the wallet with chain `solana:mainnet`.
 
-Current limitation: the app is wired to mainnet only (`web/lib/rpc.ts` defaults to `https://api.mainnet-beta.solana.com`, `SOLANA_RPC_URL` overrides it; the wallet call hardcodes `solana:mainnet`). The program does not exist on mainnet (read 2026-09-25, slot 450271154), so the home page and `/vaults` show "Not initialised", and a transaction built by the API cannot succeed when sent. Pointing `SOLANA_RPC_URL` at devnet does not help either: the mint list in `web/lib/tessera.ts` holds the mainnet tKalshi and tOpenAI addresses, which have no vault on devnet.
+To wrap for real today, use `/devnet`: it runs the same `wrap` and `unwrap` against the deployed devnet program and the tKalshi replica, the wallet signs, and the app relays the signed transaction to devnet (`web/components/devnet-panel.tsx`, `web/app/api/devnet/send/route.ts`). `web/check-devnet.mjs` exercises a real devnet wrap.
+
+Limitation of the mainnet flow above: it is wired to mainnet only (`web/lib/rpc.ts` defaults to `https://api.mainnet-beta.solana.com`, `SOLANA_RPC_URL` overrides it; the wallet call hardcodes `solana:mainnet`). The program does not exist on mainnet (read 2026-09-25, slot 450271154), so the home page and `/vaults` show "Not initialised", and a transaction built by the API cannot succeed when sent. Pointing `SOLANA_RPC_URL` at devnet does not help either: the mint list in `web/lib/tessera.ts` holds the mainnet tKalshi and tOpenAI addresses, which have no vault on devnet.
 
 ### `/api/wrap` and `/api/unwrap`
 

@@ -28,7 +28,7 @@ The devnet binary is the one built from this source. `solana program dump -u dev
 What follows from the table:
 
 - The full wrap, DBC launch, buy, and unwrap loop has run on devnet against a Token-2022 replica of tKalshi (see `DEVNET.md` and [Reproduce the devnet run](guides/reproduce-the-devnet-run.md)).
-- The web app talks to mainnet only (`web/lib/rpc.ts`, wallet chain `solana:mainnet` in `web/lib/use-wallet.ts`). Until the program exists on mainnet, `/vaults` shows "Not initialised" and a wrap or unwrap built by `/api/wrap` or `/api/unwrap` cannot succeed on chain.
+- `/devnet` in the web app wraps, unwraps and buys against the deployed devnet program and the tKalshi replica: the wallet signs, the app relays to devnet (`web/app/devnet/page.tsx`, `web/components/devnet-panel.tsx`, `web/lib/devnet.ts`, `web/app/api/devnet/send/route.ts`), and `web/check-devnet.mjs` runs a real wrap. The mainnet pages (`/`, `/vaults`, `/api/wrap`, `/api/unwrap`) still target mainnet, where the program does not exist yet, so a wrap built there cannot succeed on chain.
 - The program has not been audited. No audit report exists in the repository.
 
 ## Pages
