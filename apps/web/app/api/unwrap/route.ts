@@ -10,8 +10,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const parsed = parseWrapRequest(body);
-    const txBase64 = await buildUnwrapTx(parsed);
-    return NextResponse.json({ txBase64 });
+    return NextResponse.json(await buildUnwrapTx(parsed));
   } catch (err) {
     const message = err instanceof Error ? err.message : "failed to build unwrap transaction";
     return NextResponse.json({ error: message }, { status: 400 });

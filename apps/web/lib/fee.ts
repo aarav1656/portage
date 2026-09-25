@@ -1,5 +1,5 @@
 import type { Connection, PublicKey } from "@solana/web3.js";
-import { TOKEN_2022_PROGRAM_ID, getEpochFee, getMint, getTransferFeeConfig } from "@solana/spl-token";
+import { TOKEN_2022_PROGRAM_ID, calculateFee, getEpochFee, getMint, getTransferFeeConfig } from "@solana/spl-token";
 
 export interface LiveTransferFee {
   bps: number;
@@ -21,4 +21,18 @@ export async function readLiveTransferFee(conn: Connection, mint: PublicKey): Pr
     maxFeeRaw: fee.maximumFee.toString(),
     decimals: mintInfo.decimals,
   };
+}
+
+/** Headroom below the live-fee quote, in bps of the amount, so a small fee change still lands. */
+export const MIN_TOLERANCE_BPS = 10n;
+
+/** Quote for one wrap or unwrap: the fee at the live rate, and the on-chain minimum (min_minted / min_out). */
+export function quoteMinimum(raw: bigint, fee: Pick<LiveTransferFee, "bps" | "maxFeeRaw">) {
+  const feeRaw = calculateFee(
+    { epoch: 0n, maximumFee: BigInt(fee.maxFeeRaw), transferFeeBasisPoints: fee.bps },
+    raw,
+  );
+  const received = raw - feeRaw;
+  const slack = (raw * MIN_TOLERANCE_BPS) / 10_000n;
+  return { fee: feeRaw, received, min: received > slack ? received - slack : 0n };
 }

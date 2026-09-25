@@ -20,13 +20,13 @@ type IxName = "init_vault" | "wrap" | "unwrap";
 function build(
   name: IxName,
   keys: Record<string, PublicKey>,
-  amount: bigint | null,
+  args: bigint[],
   programId: PublicKey,
 ): TransactionInstruction {
   const def = idl.instructions.find((i) => i.name === name)!;
-  const data = Buffer.alloc(8 + (amount === null ? 0 : 8));
+  const data = Buffer.alloc(8 + 8 * args.length);
   Buffer.from(def.discriminator).copy(data, 0);
-  if (amount !== null) data.writeBigUInt64LE(amount, 8);
+  args.forEach((a, i) => data.writeBigUInt64LE(a, 8 + 8 * i));
   return new TransactionInstruction({
     programId,
     data,
@@ -52,7 +52,7 @@ export function initVaultIx(payer: PublicKey, underlyingMint: PublicKey, program
       token_program: TOKEN_PROGRAM_ID,
       system_program: SystemProgram.programId,
     },
-    null,
+    [],
     programId,
   );
 }
@@ -71,6 +71,7 @@ function moveIx(
   user: PublicKey,
   underlyingMint: PublicKey,
   amount: bigint,
+  min: bigint,
   overrides: Record<string, PublicKey>,
   programId: PublicKey,
 ) {
@@ -90,28 +91,32 @@ function moveIx(
       token_program: TOKEN_PROGRAM_ID,
       ...overrides,
     },
-    amount,
+    [amount, min],
     programId,
   );
 }
 
+/** `minMinted`: the transaction fails unless at least this many wrapped base units are minted. */
 export const wrapIx = (
   user: PublicKey,
   underlyingMint: PublicKey,
   amount: bigint,
+  minMinted: bigint,
   overrides: Record<string, PublicKey> = {},
   programId = PORTAGE_PROGRAM_ID,
-) => moveIx("wrap", user, underlyingMint, amount, overrides, programId);
+) => moveIx("wrap", user, underlyingMint, amount, minMinted, overrides, programId);
 
+/** `minOut`: the transaction fails unless the user receives at least this much underlying after the transfer fee. */
 export const unwrapIx = (
   user: PublicKey,
   underlyingMint: PublicKey,
   amount: bigint,
+  minOut: bigint,
   overrides: Record<string, PublicKey> = {},
   programId = PORTAGE_PROGRAM_ID,
-) => moveIx("unwrap", user, underlyingMint, amount, overrides, programId);
+) => moveIx("unwrap", user, underlyingMint, amount, minOut, overrides, programId);
 
 export const PORTAGE_ERRORS = Object.fromEntries(idl.errors.map((e) => [e.name, e.code])) as Record<
-  "UnsupportedUnderlying" | "NothingReceived" | "InvariantViolated",
+  "UnsupportedUnderlying" | "NothingReceived" | "InvariantViolated" | "BelowMinimum",
   number
 >;

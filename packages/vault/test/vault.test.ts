@@ -146,7 +146,7 @@ describe("portage vault on the real tKalshi mint", () => {
     const sent = 1_234_567_891n;
     const wrapFee = fee(sent);
     expect(wrapFee).toBe(2_469_136n); // ceil(1_234_567_891 * 20 / 10_000)
-    ok(send([wrapIx(u.kp.publicKey, TKALSHI, sent)], [u.kp]));
+    ok(send([wrapIx(u.kp.publicKey, TKALSHI, sent, sent - wrapFee)], [u.kp]));
     const minted = sent - wrapFee;
     expect(amountOf(u.userWrapped)).toBe(minted);
     expect(amountOf(u.userUnderlying)).toBe(start - sent);
@@ -155,7 +155,7 @@ describe("portage vault on the real tKalshi mint", () => {
 
     const back = minted;
     const unwrapFee = fee(back);
-    ok(send([unwrapIx(u.kp.publicKey, TKALSHI, back)], [u.kp]));
+    ok(send([unwrapIx(u.kp.publicKey, TKALSHI, back, back - unwrapFee)], [u.kp]));
     expect(amountOf(u.userWrapped)).toBe(0n);
     expect(amountOf(u.userUnderlying)).toBe(back - unwrapFee);
     expect(state()).toEqual(before);
@@ -175,12 +175,12 @@ describe("portage vault on the real tKalshi mint", () => {
       if (i % 3 === 2 && held > 0n) {
         const amt = (x % held) + 1n;
         const pre = amountOf(u.userUnderlying);
-        ok(send([unwrapIx(u.kp.publicKey, TKALSHI, amt)], [u.kp]));
+        ok(send([unwrapIx(u.kp.publicKey, TKALSHI, amt, amt - fee(amt))], [u.kp]));
         expect(amountOf(u.userUnderlying) - pre).toBe(amt - fee(amt));
       } else {
         const amt = (x % 5_000_000_000_000n) + 600n;
         const preW = amountOf(u.userWrapped);
-        ok(send([wrapIx(u.kp.publicKey, TKALSHI, amt)], [u.kp]));
+        ok(send([wrapIx(u.kp.publicKey, TKALSHI, amt, amt - fee(amt))], [u.kp]));
         expect(amountOf(u.userWrapped) - preW).toBe(amt - fee(amt));
       }
       assertInvariant();
@@ -191,19 +191,19 @@ describe("portage vault on the real tKalshi mint", () => {
 
   it("unwrap more than owned fails", () => {
     const u = newUser(5_000_000_000n);
-    ok(send([wrapIx(u.kp.publicKey, TKALSHI, 5_000_000_000n)], [u.kp]));
+    ok(send([wrapIx(u.kp.publicKey, TKALSHI, 5_000_000_000n, 0n)], [u.kp]));
     const held = amountOf(u.userWrapped);
     const before = state();
-    fails(send([unwrapIx(u.kp.publicKey, TKALSHI, held + 1n)], [u.kp]), "insufficient funds");
+    fails(send([unwrapIx(u.kp.publicKey, TKALSHI, held + 1n, 0n)], [u.kp]), "insufficient funds");
     expect(state()).toEqual(before);
   });
 
   it("cannot unwrap someone else's wrapped tokens", () => {
     const victim = newUser(5_000_000_000n);
-    ok(send([wrapIx(victim.kp.publicKey, TKALSHI, 5_000_000_000n)], [victim.kp]));
+    ok(send([wrapIx(victim.kp.publicKey, TKALSHI, 5_000_000_000n, 0n)], [victim.kp]));
     const thief = newUser(0n);
     fails(
-      send([unwrapIx(thief.kp.publicKey, TKALSHI, 1_000n, { user_wrapped: victim.userWrapped })], [thief.kp]),
+      send([unwrapIx(thief.kp.publicKey, TKALSHI, 1_000n, 0n, { user_wrapped: victim.userWrapped })], [thief.kp]),
       "ConstraintTokenOwner",
     );
   });
@@ -216,8 +216,8 @@ describe("portage vault on the real tKalshi mint", () => {
     // Attacker-owned tKalshi account posing as the vault: deposit would stay with the attacker.
     const fakeVaultToken = userAccounts(attacker.publicKey, TKALSHI).userUnderlying;
     ok(send([createAssociatedTokenAccountIdempotentInstruction(attacker.publicKey, fakeVaultToken, attacker.publicKey, TKALSHI, TOKEN_2022_PROGRAM_ID)], [attacker]));
-    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1_000_000n, { vault_token: fakeVaultToken })], [u.kp]), "ConstraintHasOne");
-    fails(send([unwrapIx(u.kp.publicKey, TKALSHI, 1_000n, { vault_token: fakeVaultToken })], [u.kp]), "ConstraintHasOne");
+    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1_000_000n, 0n, { vault_token: fakeVaultToken })], [u.kp]), "ConstraintHasOne");
+    fails(send([unwrapIx(u.kp.publicKey, TKALSHI, 1_000n, 0n, { vault_token: fakeVaultToken })], [u.kp]), "ConstraintHasOne");
 
     // Attacker-controlled legacy mint posing as the wrapped mint.
     const fakeMint = Keypair.generate();
@@ -231,13 +231,13 @@ describe("portage vault on the real tKalshi mint", () => {
         [attacker, fakeMint],
       ),
     );
-    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1_000_000n, { wrapped_mint: fakeMint.publicKey })], [u.kp]), "ConstraintHasOne");
+    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1_000_000n, 0n, { wrapped_mint: fakeMint.publicKey })], [u.kp]), "ConstraintHasOne");
 
     // A genuine vault for a different fee-bearing mint, passed alongside tKalshi accounts.
     const other = feeMint(attacker, 9, 20);
     ok(send([initVaultIx(attacker.publicKey, other)], [attacker]));
     fails(
-      send([unwrapIx(u.kp.publicKey, TKALSHI, 1_000n, { vault: vaultAddresses(other).vault })], [u.kp]),
+      send([unwrapIx(u.kp.publicKey, TKALSHI, 1_000n, 0n, { vault: vaultAddresses(other).vault })], [u.kp]),
       "ConstraintSeeds",
     );
   });
@@ -248,14 +248,40 @@ describe("portage vault on the real tKalshi mint", () => {
     const before = state();
     // 1 base unit pays a 1 unit fee: vault receives 0, so nothing may be minted.
     expect(fee(1n)).toBe(1n);
-    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1n)], [u.kp]), "NothingReceived");
+    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1n, 0n)], [u.kp]), "NothingReceived");
     // Wrap with an empty source account.
     const broke = newUser(0n);
-    fails(send([wrapIx(broke.kp.publicKey, TKALSHI, 1_000n)], [broke.kp]), "insufficient funds");
+    fails(send([wrapIx(broke.kp.publicKey, TKALSHI, 1_000n, 0n)], [broke.kp]), "insufficient funds");
     // Direct MintTo signed by anyone but the vault PDA.
     fails(send([createMintToInstruction(wrappedMint, u.userWrapped, u.kp.publicKey, 1_000n)], [u.kp]), "owner does not match");
     expect(state()).toEqual(before);
     expect(amountOf(u.userWrapped)).toBe(0n);
+  });
+
+  it("unwrap fails when min_out is above what the fee allows, and wrap when min_minted is", () => {
+    const u = newUser(5_000_000_000n);
+    const sent = 5_000_000_000n;
+    fails(send([wrapIx(u.kp.publicKey, TKALSHI, sent, sent - fee(sent) + 1n)], [u.kp]), "BelowMinimum");
+    ok(send([wrapIx(u.kp.publicKey, TKALSHI, sent, sent - fee(sent))], [u.kp]));
+    const held = amountOf(u.userWrapped);
+    const before = state();
+    const underlyingBefore = amountOf(u.userUnderlying);
+    fails(send([unwrapIx(u.kp.publicKey, TKALSHI, held, held - fee(held) + 1n)], [u.kp]), "BelowMinimum");
+    expect(state()).toEqual(before);
+    expect(amountOf(u.userWrapped)).toBe(held);
+    expect(amountOf(u.userUnderlying)).toBe(underlyingBefore);
+  });
+
+  it("unwrap into the vault token account, or wrap from it, is rejected", () => {
+    const u = newUser(5_000_000_000n);
+    ok(send([wrapIx(u.kp.publicKey, TKALSHI, 5_000_000_000n, 0n)], [u.kp]));
+    const held = amountOf(u.userWrapped);
+    const before = state();
+    const { vaultToken } = vaultAddresses(TKALSHI);
+    fails(send([unwrapIx(u.kp.publicKey, TKALSHI, held, 0n, { user_underlying: vaultToken })], [u.kp]), "SelfTransfer");
+    fails(send([wrapIx(u.kp.publicKey, TKALSHI, 1_000n, 0n, { user_underlying: vaultToken })], [u.kp]), "SelfTransfer");
+    expect(state()).toEqual(before);
+    expect(amountOf(u.userWrapped)).toBe(held);
   });
 
   it("init_vault refuses an underlying with a permanent delegate", () => {

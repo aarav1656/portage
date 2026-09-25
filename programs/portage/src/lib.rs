@@ -14,6 +14,12 @@ pub const VAULT: &[u8] = b"vault";
 pub const VAULT_TOKEN: &[u8] = b"vault_token";
 pub const WRAPPED: &[u8] = b"wrapped";
 
+// Trust assumption (audit H1): the init_vault allowlist checks extensions only, not the base
+// mint's freeze_authority. If the underlying has one (tKalshi does), its holder can freeze
+// vault_token, after which every wrap and unwrap fails until it is thawed. Wrapped holders
+// therefore trust the underlying issuer exactly as much as underlying holders do. The wrapped
+// mint itself has no freeze authority, and this program has no admin path to work around a freeze.
+
 #[program]
 pub mod portage {
     use super::*;
@@ -45,7 +51,7 @@ pub mod portage {
         Ok(())
     }
 
-    pub fn wrap(ctx: Context<Wrap>, amount: u64) -> Result<()> {
+    pub fn wrap(ctx: Context<Wrap>, amount: u64, min_minted: u64) -> Result<()> {
         let a = ctx.accounts;
         let before = a.vault_token.amount;
         token_interface::transfer_checked(
@@ -68,6 +74,7 @@ pub mod portage {
             .checked_sub(before)
             .ok_or(PortageError::InvariantViolated)?;
         require!(received > 0, PortageError::NothingReceived);
+        require!(received >= min_minted, PortageError::BelowMinimum);
 
         let mint_key = a.underlying_mint.key();
         let seeds: &[&[u8]] = &[VAULT, mint_key.as_ref(), &[a.vault.bump]];
@@ -92,9 +99,10 @@ pub mod portage {
         Ok(())
     }
 
-    pub fn unwrap(ctx: Context<Unwrap>, amount: u64) -> Result<()> {
+    pub fn unwrap(ctx: Context<Unwrap>, amount: u64, min_out: u64) -> Result<()> {
         let a = ctx.accounts;
         require!(amount > 0, PortageError::NothingReceived);
+        let user_before = a.user_underlying.amount;
         token::burn(
             CpiContext::new(
                 a.token_program.to_account_info(),
@@ -122,6 +130,14 @@ pub mod portage {
             amount,
             a.underlying_mint.decimals,
         )?;
+        // Measured, not computed: the delta is what the user got after whatever fee applied this epoch.
+        a.user_underlying.reload()?;
+        let paid_out = a
+            .user_underlying
+            .amount
+            .checked_sub(user_before)
+            .ok_or(PortageError::InvariantViolated)?;
+        require!(paid_out >= min_out, PortageError::BelowMinimum);
         a.vault_token.reload()?;
         a.wrapped_mint.reload()?;
         require!(
@@ -177,7 +193,8 @@ pub struct Wrap<'info> {
     pub vault_token: InterfaceAccount<'info, ITokenAccount>,
     #[account(mut)]
     pub wrapped_mint: Account<'info, Mint>,
-    #[account(mut, token::mint = underlying_mint)]
+    #[account(mut, token::mint = underlying_mint,
+        constraint = user_underlying.key() != vault_token.key() @ PortageError::SelfTransfer)]
     pub user_underlying: InterfaceAccount<'info, ITokenAccount>,
     #[account(mut, token::mint = wrapped_mint)]
     pub user_wrapped: Account<'info, TokenAccount>,
@@ -196,7 +213,8 @@ pub struct Unwrap<'info> {
     pub vault_token: InterfaceAccount<'info, ITokenAccount>,
     #[account(mut)]
     pub wrapped_mint: Account<'info, Mint>,
-    #[account(mut, token::mint = underlying_mint)]
+    #[account(mut, token::mint = underlying_mint,
+        constraint = user_underlying.key() != vault_token.key() @ PortageError::SelfTransfer)]
     pub user_underlying: InterfaceAccount<'info, ITokenAccount>,
     #[account(mut, token::mint = wrapped_mint, token::authority = user)]
     pub user_wrapped: Account<'info, TokenAccount>,
@@ -225,4 +243,8 @@ pub enum PortageError {
     NothingReceived,
     #[msg("Wrapped supply would exceed vault balance")]
     InvariantViolated,
+    #[msg("Amount after the transfer fee is below the caller's minimum")]
+    BelowMinimum,
+    #[msg("User underlying account cannot be the vault token account")]
+    SelfTransfer,
 }

@@ -10,8 +10,7 @@ export async function POST(req: NextRequest) {
   }
   try {
     const parsed = parseWrapRequest(body);
-    const txBase64 = await buildWrapTx(parsed);
-    return NextResponse.json({ txBase64 });
+    return NextResponse.json(await buildWrapTx(parsed));
   } catch (err) {
     const message = err instanceof Error ? err.message : "failed to build wrap transaction";
     return NextResponse.json({ error: message }, { status: 400 });

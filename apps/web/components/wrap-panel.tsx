@@ -1,9 +1,9 @@
 "use client";
 import { useMemo, useState } from "react";
-import { calculateFee } from "@solana/spl-token";
 import { TESSERA_TOKENS, type TesseraKey } from "@/lib/tessera";
 import type { MarketSnapshot } from "@/lib/market";
 import { formatAmount, formatBps, parseAmount } from "@/lib/format";
+import { MIN_TOLERANCE_BPS, quoteMinimum } from "@/lib/fee";
 import { ConnectArea } from "@/components/connect-area";
 import { AddressLink } from "@/components/address-link";
 import type { WalletState } from "@/lib/use-wallet";
@@ -40,12 +40,8 @@ export function WrapPanel({
       return null;
     }
     if (raw <= 0n) return null;
-    const fee = calculateFee(
-      { epoch: 0n, maximumFee: BigInt(tokenMarket.maxFeeRaw), transferFeeBasisPoints: tokenMarket.transferFeeBps },
-      raw,
-    );
-    const received = raw - fee;
-    return { raw, fee, received, decimals: tokenMarket.decimals };
+    const q = quoteMinimum(raw, { bps: tokenMarket.transferFeeBps, maxFeeRaw: tokenMarket.maxFeeRaw });
+    return { raw, ...q, decimals: tokenMarket.decimals };
   }, [amount, tokenMarket]);
 
   function reset() {
@@ -63,7 +59,12 @@ export function WrapPanel({
       const res = await fetch(`/api/${mode}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ user: wallet.connected.address, token, amountRaw: breakdown.raw.toString() }),
+        body: JSON.stringify({
+          user: wallet.connected.address,
+          token,
+          amountRaw: breakdown.raw.toString(),
+          minRaw: breakdown.min.toString(),
+        }),
       });
       const json = (await res.json()) as { txBase64?: string; error?: string };
       if (!res.ok || !json.txBase64) throw new Error(json.error ?? "failed to build transaction");
@@ -150,7 +151,11 @@ export function WrapPanel({
           <span className="mono text-[var(--ink)]">
             {formatAmount(breakdown.received, breakdown.decimals)} {mode === "wrap" ? wrappedSymbol : TESSERA_TOKENS[token].label}
           </span>
-          .
+          . The transaction reverts if you would get less than{" "}
+          <span className="mono text-[var(--ink)]">
+            {formatAmount(breakdown.min, breakdown.decimals)} {mode === "wrap" ? wrappedSymbol : TESSERA_TOKENS[token].label}
+          </span>{" "}
+          (live fee plus {formatBps(Number(MIN_TOLERANCE_BPS))} headroom).
         </p>
       ) : (
         <p className="mt-3 text-sm text-[var(--ink-3)]">Enter an amount to see the manifest breakdown.</p>
