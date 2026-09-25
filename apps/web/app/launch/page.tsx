@@ -1,4 +1,5 @@
 import { LaunchConfigurator, type QuoteInfo } from "@/components/launch-configurator";
+import { PageHeader } from "@/components/page-header";
 import { fetchMarketSnapshot } from "@/lib/market";
 import type { TesseraKey } from "@/lib/tessera";
 
@@ -17,15 +18,18 @@ export default async function LaunchPage() {
 
   return (
     <div className="space-y-10 py-10">
-      <section className="fade-in">
-        <p className="mono text-xs uppercase tracking-widest text-[var(--ink-3)]">Launch manifest</p>
-        <h1 className="mt-2 text-4xl leading-tight sm:text-5xl">Configure a launch quoted in wtKALSHI</h1>
-        <p className="mt-4 max-w-2xl text-base text-[var(--ink-2)]">
-          Set a name, symbol, and the two market caps that bound the bonding curve. The curve and its fee schedule below
-          come straight out of <code className="mono">packages/dbc</code>&apos;s <code className="mono">portageCurve</code>,
-          priced against the live Tessera mark.
-        </p>
-      </section>
+      <PageHeader
+        no="04"
+        eyebrow="Launch manifest"
+        title="Configure a launch quoted in wtKALSHI"
+        lede={
+          <>
+            Set a name, symbol, and the two market caps that bound the bonding curve. The curve and its fee schedule
+            below come straight out of <code className="mono">packages/dbc</code>&apos;s{" "}
+            <code className="mono">portageCurve</code>, priced against the live Tessera mark.
+          </>
+        }
+      />
 
       <LaunchConfigurator quotes={quotes} quotesError={quotesError} />
     </div>

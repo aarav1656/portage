@@ -3,9 +3,9 @@ import { formatUsd } from "@/lib/format";
 
 const WIDTH = 640;
 const HEIGHT = 220;
-const PAD_LEFT = 56;
+const PAD_LEFT = 72;
 const PAD_BOTTOM = 24;
-const PAD_TOP = 12;
+const PAD_TOP = 14;
 const PAD_RIGHT = 12;
 
 /** Price-vs-supply bonding curve, drawn from real portageCurve() segments. Log-scale on price. */
@@ -31,26 +31,38 @@ export function CurveChart({ points, graduateUsd }: { points: CurvePoint[]; grad
   const areaPath = `${path} L${x(maxSupply).toFixed(2)},${PAD_TOP + plotH} L${x(0).toFixed(2)},${PAD_TOP + plotH} Z`;
   const first = points[0]!;
   const last = points[points.length - 1]!;
+  const midSupply = maxSupply / 2;
 
   return (
     <figure>
-      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label="Bonding curve: price versus base tokens sold" className="w-full">
+      <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`Bonding curve: price runs from ${formatUsd(first.priceUsd)} at zero supply to ${formatUsd(last.priceUsd)} at ${maxSupply.toLocaleString("en-US")} tokens sold, log scale`} className="w-full">
         <line x1={PAD_LEFT} y1={PAD_TOP} x2={PAD_LEFT} y2={PAD_TOP + plotH} stroke="var(--line)" strokeWidth={1} />
         <line x1={PAD_LEFT} y1={PAD_TOP + plotH} x2={WIDTH - PAD_RIGHT} y2={PAD_TOP + plotH} stroke="var(--line)" strokeWidth={1} />
         <path d={areaPath} fill="var(--accent)" fillOpacity={0.12} stroke="none" />
         <path d={path} fill="none" stroke="var(--accent)" strokeWidth={2} />
-        <text x={PAD_LEFT} y={PAD_TOP - 2} className="mono" fontSize={10} fill="var(--ink-2)">
+
+        {/* y axis: price at top and bottom of the plotted range (log scale) */}
+        <text x={PAD_LEFT - 6} y={PAD_TOP + 4} textAnchor="end" className="mono" fontSize={10} fill="var(--ink-2)">
           {formatUsd(last.priceUsd)}
         </text>
-        <text x={PAD_LEFT} y={HEIGHT - 4} className="mono" fontSize={10} fill="var(--ink-2)">
+        <text x={PAD_LEFT - 6} y={PAD_TOP + plotH} textAnchor="end" className="mono" fontSize={10} fill="var(--ink-2)">
           {formatUsd(first.priceUsd)}
         </text>
+
+        {/* x axis: tokens sold, start / mid / graduation */}
+        <text x={PAD_LEFT} y={HEIGHT - 4} textAnchor="start" className="mono" fontSize={10} fill="var(--ink-2)">
+          0
+        </text>
+        <text x={PAD_LEFT + plotW / 2} y={HEIGHT - 4} textAnchor="middle" className="mono" fontSize={10} fill="var(--ink-2)">
+          {midSupply.toLocaleString("en-US", { notation: "compact" })}
+        </text>
         <text x={WIDTH - PAD_RIGHT} y={HEIGHT - 4} textAnchor="end" className="mono" fontSize={10} fill="var(--ink-2)">
-          {maxSupply.toLocaleString("en-US", { maximumFractionDigits: 0 })} tokens sold
+          {maxSupply.toLocaleString("en-US", { notation: "compact" })} sold
         </text>
       </svg>
       <figcaption className="mt-2 text-xs text-[var(--ink-3)]">
-        Price (log scale) against base tokens sold, from start to the {formatUsd(graduateUsd)} graduation threshold.
+        Price (log scale, y axis) against base tokens sold (x axis), from start to the {formatUsd(graduateUsd)}{" "}
+        graduation threshold.
       </figcaption>
     </figure>
   );

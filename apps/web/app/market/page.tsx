@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fetchTMarketSnapshot, type TMarketSnapshot } from "@/lib/tmarket";
 import { TESSERA_TOKENS, type TesseraKey } from "@/lib/tessera";
 import { AddressLink } from "@/components/address-link";
+import { PageHeader } from "@/components/page-header";
 import { formatUsd } from "@/lib/format";
 
 // Reads live Tessera, Jupiter, and DexScreener prices on every request; must never be statically cached.
@@ -20,21 +21,24 @@ export default async function MarketPage() {
 
   return (
     <div className="space-y-10 py-10">
-      <section className="fade-in">
-        <p className="mono text-xs uppercase tracking-widest text-[var(--ink-3)]">Market · mark vs DEX</p>
-        <h1 className="mt-2 text-4xl leading-tight sm:text-5xl">Where the DEX disagrees with Tessera</h1>
-        <p className="mt-4 max-w-2xl text-base text-[var(--ink-2)]">
-          The Tessera mark is the pre-IPO desk price for the raw token. The DEX price is what wtKALSHI or wtOpenAI
-          actually clears at on Jupiter once it is wrapped and pooled. The gap between them is the premium or discount
-          a wrap-and-launch can close.
-        </p>
-      </section>
+      <PageHeader
+        no="03"
+        eyebrow="Mark vs DEX"
+        title="Where the DEX disagrees with Tessera"
+        lede={
+          <>
+            The Tessera mark is the pre-IPO desk price for the raw token. The DEX price is what wtKALSHI or wtOpenAI
+            actually clears at on Jupiter once it is wrapped and pooled. The gap between them is the premium or discount
+            a wrap-and-launch can close.
+          </>
+        }
+      />
 
       {marketError !== null && (
         <p className="text-sm text-[var(--rejected)]">Could not read live market data: {marketError}</p>
       )}
 
-      <div className="space-y-6">
+      <div className="grid gap-6 lg:grid-cols-2">
         {keys.map((key, i) => {
           const t = TESSERA_TOKENS[key];
           const row = market?.[t.code as "tKalshi" | "tOpenAI"] ?? null;
@@ -42,7 +46,7 @@ export default async function MarketPage() {
           return (
             <section
               key={key}
-              className="panel fade-in p-4 sm:p-5"
+              className="panel fade-in flex flex-col p-4 sm:p-5"
               style={{ animationDelay: `${i * 60}ms` }}
               aria-label={`${t.label} market`}
             >
@@ -88,8 +92,8 @@ export default async function MarketPage() {
                 </dl>
               )}
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                <Link href={`/?token=${key}`} className="btn btn-primary px-3 py-1.5 text-xs">
+              <div className="mt-4 flex flex-wrap gap-2 pt-1">
+                <Link href={`/?token=${key}#wrap`} className="btn btn-primary px-3 py-1.5 text-xs">
                   Wrap for a DBC launch
                 </Link>
                 <Link href="/launch" className="btn btn-outline px-3 py-1.5 text-xs">

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Domine, IBM_Plex_Mono, Work_Sans } from "next/font/google";
 import { Nav } from "@/components/nav";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const displaySerif = Domine({
@@ -34,7 +35,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className={`${displaySerif.variable} ${workSans.variable} ${plexMono.variable}`}>
       <body className="antialiased">
         <Nav />
-        <main className="mx-auto max-w-4xl px-4 pb-24 sm:px-6">{children}</main>
+        <main className="mx-auto max-w-[1320px] px-4 pb-20 sm:px-6 lg:px-10">{children}</main>
+        <SiteFooter />
       </body>
     </html>
   );
