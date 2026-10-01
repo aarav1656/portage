@@ -410,8 +410,8 @@ rect.c-bg-rect { fill: var(--bg); }
         <text x="845" y="146" class="t-external" font-size="7" text-anchor="middle">rejects fee-bearing quote mints</text>
         </g>
 
-        <g id="node-program" data-node-id="program" data-node-label="Portage program" tabindex="0" role="button" aria-label="Focus Portage program, not yet deployed, Vault authority: only the program PDA signs here" aria-pressed="false" data-node-kind="security" data-node-sublabel="not yet deployed" data-node-tag="AWHaq...9Q8V" data-node-context="Vault authority: only the program PDA signs here">
-          <title>Portage program · not yet deployed · Vault authority: only the program PDA signs here · AWHaq...9Q8V</title>
+        <g id="node-program" data-node-id="program" data-node-label="Portage program" tabindex="0" role="button" aria-label="Focus Portage program, live on devnet, immutable, Vault authority: only the program PDA signs here" aria-pressed="false" data-node-kind="security" data-node-sublabel="live on devnet, immutable" data-node-tag="AWHaq...9Q8V" data-node-context="Vault authority: only the program PDA signs here">
+          <title>Portage program · live on devnet, immutable · Vault authority: only the program PDA signs here · AWHaq...9Q8V</title>
           <rect x="770" y="280" width="150" height="64" rx="6" class="c-mask"/>
           <rect x="770" y="280" width="150" height="64" rx="6" class="c-security" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="security" class="semantic-sigil s-security" transform="translate(776 286) scale(0.6875)">
@@ -419,7 +419,7 @@ rect.c-bg-rect { fill: var(--bg); }
             <path d="m5.8 8 1.5 1.5 3-3"/>
           </g>
           <text data-node-label="" x="845" y="310" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">Portage program</text>
-        <text x="845" y="326" class="t-muted" font-size="9" text-anchor="middle">not yet deployed</text>
+        <text x="845" y="326" class="t-muted" font-size="9" text-anchor="middle">live on devnet, immutable</text>
         <text x="845" y="336" class="t-security" font-size="7" text-anchor="middle">AWHaq...9Q8V</text>
         </g>
 
