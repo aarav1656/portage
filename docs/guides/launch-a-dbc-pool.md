@@ -17,7 +17,9 @@ Files: `web/app/launch/page.tsx`, `web/components/launch-configurator.tsx`, `web
    - plots price against tokens sold, sampled 24 points per curve segment with the SDK's `getDeltaAmountBaseUnsigned`, clipped at the graduation price from `getCurveBreakdown`;
    - plots the base fee for each scheduler period with the SDK's `getBaseFeeNumeratorByPeriod`.
    It rejects quote decimals outside 6 to 9, a non-positive mark or start market cap, and a graduation market cap not above the start.
-4. Simulate: calls `GET /api/launch-sim?name=&symbol=&supply=&startMcapUsd=`. The route builds `buildLaunchTx` and runs mainnet `simulateTransaction` with `sigVerify: false`. It returns `err`, `logs`, `unitsConsumed`, `startPriceUsd` (`startMcapUsd / supply`), `anchor.tesseraMarkPrice`, `anchor.fetchedAt`, `anchor.stale`, and `simulatedAt`.
+4. Simulate: calls `GET /api/launch-sim?name=&symbol=&supply=&startMcapUsd=&graduateMcapUsd=`. The graduation input in the configurator is the `graduateMcapUsd` the route simulates, so changing it changes the transaction that is proven. `graduateMcapUsd` must be a number greater than `startMcapUsd`; anything else returns 400 `graduateMcapUsd must be a number greater than startMcapUsd`. The route passes it to `buildLaunchTx` as `graduateMarketCapUsd`, reads `migrationQuoteThreshold` from `portageCurve` with the same inputs, and runs mainnet `simulateTransaction` with `sigVerify: false`. It returns `err`, `logs`, `unitsConsumed`, `startPriceUsd` (`startMcapUsd / supply`), `graduateMarketCapUsd` (the value simulated), `migrationQuoteThreshold` (a raw-unit string), `anchor.tesseraMarkPrice`, `anchor.fetchedAt`, `anchor.stale`, and `simulatedAt`.
+
+`web/check-launch-inputs.mjs` boots the app and calls the route with a $50,000 start: a $100,000 graduation returns `err: null` with `migrationQuoteThreshold` `100099942574`, a $1,000,000 graduation returns `err: null` with `441623967210`, and a $40,000 graduation, below the start, returns 400. The thresholds scale with the graduation target at the live tKalshi mark.
 
 The simulation anchors its price to the live tKalshi mark and quotes in JitoSOL (`J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn`), a legacy SPL mint with no extensions, which is how DBC sees a wrapped mint. The configurator proves the launch transaction against the live program; `packages/dbc/src/devnet.ts` is the driver that submits one.
 
@@ -89,4 +91,4 @@ Preconditions:
 - The vault for `underlyingMint` exists on the target cluster (the SDK reads the quote mint while building).
 - To buy on the pool you need wrapped tokens, so `wrap` first. `devnet.ts` `buy` then calls `client.pool.swap({ owner, pool, amountIn, minimumAmountOut, swapBaseForQuote: false, referralTokenAccount: null })`.
 
-To check a configuration against the live mainnet DBC program, run `pnpm sim green` in `packages/dbc` (quoted in JitoSOL, a fee-free legacy mint) or call `/api/launch-sim`.
+To check a configuration against the live mainnet DBC program, run `pnpm sim green` in `packages/dbc` (quoted in JitoSOL, a fee-free legacy mint) or call `/api/launch-sim` with a `graduateMcapUsd` above `startMcapUsd`.

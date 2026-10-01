@@ -46,7 +46,8 @@ Tessera's live mark price so the curve's market caps can be expressed in USD ter
   transactions and `/api/devnet/send` relays them to devnet.
 - `/launch`: a DBC launch configurator built on `packages/dbc`'s curve, priced against the live
   Tessera mark from `/api/market`, with a mainnet simulation of the exact launch transaction
-  through `/api/launch-sim`.
+  through `/api/launch-sim`, which takes the configurator's graduation market cap as `graduateMcapUsd`
+  and returns `graduateMarketCapUsd` and `migrationQuoteThreshold` beside the program logs.
 - `/market`: Tessera mark price against the live Jupiter price and the deepest DexScreener pool for
   each wrapped token, from `/api/tmarket`.
 - `/pitch` and `/docs`: the deck, and the rendered pages of the `docs/` tree.
