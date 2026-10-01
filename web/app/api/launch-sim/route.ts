@@ -7,7 +7,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { TokenDecimal } from "@meteora-ag/dynamic-bonding-curve-sdk";
-import { buildLaunchTx } from "@portage/dbc";
+import { buildLaunchTx, portageCurve } from "@portage/dbc";
 import { fetchMarketSnapshot } from "@/lib/market";
 import { connection } from "@/lib/rpc";
 
@@ -33,6 +33,13 @@ export async function GET(req: Request) {
   if (!Number.isFinite(startMcapUsd) || startMcapUsd <= 0) {
     return NextResponse.json({ error: "startMcapUsd must be a positive number" }, { status: 400 });
   }
+  const graduateMcapUsd = Number(searchParams.get("graduateMcapUsd"));
+  if (!Number.isFinite(graduateMcapUsd) || graduateMcapUsd <= startMcapUsd) {
+    return NextResponse.json(
+      { error: "graduateMcapUsd must be a number greater than startMcapUsd" },
+      { status: 400 },
+    );
+  }
 
   try {
     const conn: Connection = connection();
@@ -45,12 +52,22 @@ export async function GET(req: Request) {
 
     const config = Keypair.generate().publicKey;
     const baseMint = Keypair.generate().publicKey;
+    // The DBC config actually deployed is built by portageCurve; read the
+    // migrationQuoteThreshold from that same function rather than re-deriving it.
+    const curve = portageCurve({
+      quoteMint: STAND_IN,
+      quoteDecimals: TokenDecimal.NINE,
+      quoteUsd,
+      startMarketCapUsd: startMcapUsd,
+      graduateMarketCapUsd: graduateMcapUsd,
+    });
+    const migrationQuoteThreshold = curve.migrationQuoteThreshold.toString();
     const tx = await buildLaunchTx(conn, {
       quoteMint: STAND_IN,
       quoteDecimals: TokenDecimal.NINE,
       quoteUsd,
       startMarketCapUsd: startMcapUsd,
-      graduateMarketCapUsd: startMcapUsd * 10,
+      graduateMarketCapUsd: graduateMcapUsd,
       config,
       baseMint,
       partner: SIM_PAYER,
@@ -79,6 +96,8 @@ export async function GET(req: Request) {
       logs: sim.value.logs ?? [],
       unitsConsumed: sim.value.unitsConsumed ?? null,
       startPriceUsd,
+      graduateMarketCapUsd: graduateMcapUsd,
+      migrationQuoteThreshold,
       anchor: {
         tesseraMarkPrice: tKalshi.markPrice,
         fetchedAt: tKalshi.asOf ?? new Date().toISOString(),

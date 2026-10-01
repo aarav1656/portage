@@ -8,6 +8,8 @@ export interface LaunchSimResult {
   logs: string[];
   unitsConsumed: number | null;
   startPriceUsd: number;
+  graduateMarketCapUsd: number;
+  migrationQuoteThreshold: string;
   anchor: { tesseraMarkPrice: number; fetchedAt: string; stale: boolean };
   simulatedAt: string;
 }
@@ -19,28 +21,36 @@ export function LaunchSimPanel({
   symbol,
   supply,
   startMcapUsd,
+  graduateMcapUsd,
 }: {
   name: string;
   symbol: string;
   supply: number;
   startMcapUsd: number;
+  graduateMcapUsd?: number;
 }) {
   const [result, setResult] = useState<LaunchSimResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const inputsValid =
-    name.trim().length > 0 && symbol.trim().length > 0 && Number.isFinite(startMcapUsd) && startMcapUsd > 0;
+    name.trim().length > 0 &&
+    symbol.trim().length > 0 &&
+    Number.isFinite(startMcapUsd) &&
+    startMcapUsd > 0 &&
+    (graduateMcapUsd === undefined || (Number.isFinite(graduateMcapUsd) && graduateMcapUsd > startMcapUsd));
 
   async function simulate() {
     setLoading(true);
     setError(null);
     try {
+      const graduate = graduateMcapUsd ?? startMcapUsd * 10;
       const qs = new URLSearchParams({
         name: name.trim() || "Portage Launch",
         symbol: (symbol.trim() || "PTG").toUpperCase(),
         supply: String(supply),
         startMcapUsd: String(startMcapUsd),
+        graduateMcapUsd: String(graduate),
       });
       const res = await fetch(`/api/launch-sim?${qs.toString()}`, { cache: "no-store" });
       const json = (await res.json()) as LaunchSimResult & { error?: string };
@@ -137,6 +147,14 @@ export function LaunchSimPanel({
                   {formatUsd(result.startPriceUsd)} at {formatUsd(result.anchor.tesseraMarkPrice)}
                   {result.anchor.stale ? " (stale)" : ""}
                 </dd>
+              </div>
+              <div className="ledger-row">
+                <dt className="text-sm text-[var(--ink-2)]">Graduation market cap</dt>
+                <dd className="mono text-right text-sm text-[var(--ink)]">{formatUsd(result.graduateMarketCapUsd)}</dd>
+              </div>
+              <div className="ledger-row">
+                <dt className="text-sm text-[var(--ink-2)]">Migration quote threshold</dt>
+                <dd className="mono break-all text-right text-sm text-[var(--ink)]">{result.migrationQuoteThreshold}</dd>
               </div>
               <div className="ledger-row">
                 <dt className="text-sm text-[var(--ink-2)]">Simulated at</dt>

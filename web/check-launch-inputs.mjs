@@ -1,0 +1,23 @@
+import { withApp } from "./serve.mjs";
+await withApp("@portage/web", 3181, async (get) => {
+  const base = "/api/launch-sim?name=Test&symbol=TST&supply=1000000000&startMcapUsd=50000";
+  const r1 = await get(`${base}&graduateMcapUsd=100000`);
+  if (r1.status !== 200) throw new Error(`graduate 100000 must return 200, got ${r1.status}`);
+  const j1 = await r1.json();
+  if (j1.err !== null) throw new Error(`launch simulation must succeed on mainnet: ${JSON.stringify(j1).slice(0, 200)}`);
+  if (!(j1.logs?.length > 3)) throw new Error("real program logs required");
+  if (j1.graduateMarketCapUsd !== 100000) throw new Error(`must echo graduateMarketCapUsd 100000, got ${j1.graduateMarketCapUsd}`);
+  const r2 = await get(`${base}&graduateMcapUsd=1000000`);
+  if (r2.status !== 200) throw new Error(`graduate 1000000 must return 200, got ${r2.status}`);
+  const j2 = await r2.json();
+  if (j2.err !== null) throw new Error(`launch simulation must succeed on mainnet: ${JSON.stringify(j2).slice(0, 200)}`);
+  if (!(j2.logs?.length > 3)) throw new Error("real program logs required");
+  if (j2.graduateMarketCapUsd !== 1000000) throw new Error(`must echo graduateMarketCapUsd 1000000, got ${j2.graduateMarketCapUsd}`);
+  const t1 = BigInt(j1.migrationQuoteThreshold);
+  const t2 = BigInt(j2.migrationQuoteThreshold);
+  if (t1 === t2) throw new Error(`thresholds must differ, both ${t1}`);
+  if (!(t2 > t1)) throw new Error(`larger graduation must raise the threshold: ${t1} vs ${t2}`);
+  const r3 = await get(`${base}&graduateMcapUsd=40000`);
+  if (r3.status !== 400) throw new Error(`graduate below start must return 400, got ${r3.status}`);
+  console.log(`ok: graduation honored, migrationQuoteThreshold ${t1} at $100000, ${t2} at $1000000, below-start rejected with 400`);
+});
