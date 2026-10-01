@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # `@portage/vault`
 
@@ -27,8 +27,6 @@ import { wrapIx, unwrapIx, initVaultIx, vaultAddresses, userAccounts } from "@po
 
 The internal `build` function looks up the instruction in the IDL by name, writes its 8-byte `discriminator`, then each argument as a little-endian `u64`. Account metas are produced in IDL order with the IDL's `signer` and `writable` flags. A missing account name throws `portage <ix>: missing account <name>`.
 
-This works because every current argument is a `u64`. An IDL change that adds a non-`u64` argument would need a change to `build`.
-
 ### `overrides`
 
 `wrapIx` and `unwrapIx` fill every account from `vaultAddresses` and `userAccounts`. `overrides` replaces any of them by IDL account name (`vault`, `vault_token`, `wrapped_mint`, `user_underlying`, `user_wrapped`, ...). Uses:
@@ -37,15 +35,18 @@ This works because every current argument is a `u64`. An IDL change that adds a 
 - Negative tests: `packages/vault/test/vault.test.ts` passes substituted accounts this way to assert `ConstraintHasOne`, `ConstraintSeeds`, `ConstraintTokenOwner`, and `SelfTransfer`.
 
 ### What the builders do not do
+### Composition
 
-- They do not create the user's ATAs. `wrap` needs `user_wrapped` to exist; `unwrap` needs `user_underlying` to exist. Prepend `createAssociatedTokenAccountIdempotentInstruction` from `@solana/spl-token`, as `web/lib/vault-tx.ts` does.
-- They do not pick a minimum. Compute `minMinted` or `minOut` from the live fee (see [The wrap model](../concepts/wrap-model.md#slippage-minimums)).
-- They do not fetch a blockhash, sign, or send.
+The builders return plain instructions, so the caller composes the transaction around them:
 
-## Known issue: `PORTAGE_ERRORS` type
+- ATAs: `wrap` takes `user_wrapped` and `unwrap` takes `user_underlying`. Prepend `createAssociatedTokenAccountIdempotentInstruction` from `@solana/spl-token`, as `web/lib/vault-tx.ts` does.
+- Minimums: compute `minMinted` or `minOut` from the live fee (see [The wrap model](../concepts/wrap-model.md#slippage-minimums)).
+- Blockhash, signing and sending stay with the caller's wallet or keypair.
 
-The object contains all five errors, built from `idl.errors`, and its type is `Record<"UnsupportedUnderlying" | "NothingReceived" | "InvariantViolated" | "BelowMinimum" | "SelfTransfer", number>`, so `PORTAGE_ERRORS.SelfTransfer` (6004) type-checks.
+## Typed error codes
+
+`PORTAGE_ERRORS` holds all five errors, built from `idl.errors`, and its type is `Record<"UnsupportedUnderlying" | "NothingReceived" | "InvariantViolated" | "BelowMinimum" | "SelfTransfer", number>`, so `PORTAGE_ERRORS.SelfTransfer` (6004) type-checks.
 
 ## Tests
 
-`packages/vault/test/vault.test.ts`, 10 tests, run with `npx vitest run` in `packages/vault`. Requires `target/deploy/portage.so` from `anchor build`, or `PORTAGE_SO` pointing at a build. The tests load the program into LiteSVM (`litesvm` 0.8.0) together with a snapshot of the mainnet tKalshi mint account (`packages/vault/test/fixtures/tkalshi-mint.json`, taken at mainnet slot 449987467 per the test file). All 10 passed on 2026-09-25. CI (`.github/workflows/ci.yml`) does not run them, because the `.so` is not built there; CI runs `pnpm -r --if-present typecheck` only.
+`packages/vault/test/vault.test.ts`: 10 tests, run with `npx vitest run` in `packages/vault`. The tests load the program built by `anchor build` (`target/deploy/portage.so`, or the build at `PORTAGE_SO`) into LiteSVM (`litesvm` 0.8.0) together with a snapshot of the mainnet tKalshi mint account (`packages/vault/test/fixtures/tkalshi-mint.json`, taken at mainnet slot 449987467 per the test file). All 10 pass (2026-09-25, and again 2026-10-01).

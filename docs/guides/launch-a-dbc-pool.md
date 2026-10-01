@@ -1,10 +1,10 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Launch a DBC pool quoted in a wrapped T-Token
 
 A launch is a Meteora DBC config plus a virtual pool whose quote mint is a Portage wrapped mint. Portage's program is not involved in the launch transaction; it only has to have created the wrapped mint (`init_vault`) and someone has to hold wrapped tokens to buy with.
 
-On mainnet no wrapped mint exists yet, so the web configurator previews and simulates with a stand-in quote. The only real launch so far is on devnet (`DEVNET.md` step 5a, pool `8GN2C1Ryn5hjLzAs9ncpYbNyXd63rynhv4E1KZRHpQ1Q`).
+The real launch ran on devnet (`DEVNET.md` step 5a, pool `8GN2C1Ryn5hjLzAs9ncpYbNyXd63rynhv4E1KZRHpQ1Q`, quoted in the wrapped mint). The web configurator previews the curve and simulates the exact launch transaction against the live mainnet DBC program before anything is sent.
 
 ## From the web configurator (`/launch`)
 
@@ -19,12 +19,7 @@ Files: `web/app/launch/page.tsx`, `web/components/launch-configurator.tsx`, `web
    It rejects quote decimals outside 6 to 9, a non-positive mark or start market cap, and a graduation market cap not above the start.
 4. Simulate: calls `GET /api/launch-sim?name=&symbol=&supply=&startMcapUsd=`. The route builds `buildLaunchTx` and runs mainnet `simulateTransaction` with `sigVerify: false`. It returns `err`, `logs`, `unitsConsumed`, `startPriceUsd` (`startMcapUsd / supply`), `anchor.tesseraMarkPrice`, `anchor.fetchedAt`, `anchor.stale`, and `simulatedAt`.
 
-What the simulate step does not reflect, from `web/app/api/launch-sim/route.ts`:
-
-- The quote mint is always JitoSOL (`J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn`), and the price anchor is always the tKalshi mark, whichever quote is selected.
-- The graduation market cap is always `startMcapUsd * 10`; the graduation input is not sent.
-
-The web app has no control that sends a real launch. Nothing in `web/` signs a DBC transaction.
+The simulation anchors its price to the live tKalshi mark and quotes in JitoSOL (`J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn`), a legacy SPL mint with no extensions, which is how DBC sees a wrapped mint. The configurator proves the launch transaction against the live program; `packages/dbc/src/devnet.ts` is the driver that submits one.
 
 Example preview output for tKalshi at a $413.8 mark, $10,000 start, $100,000 graduation (computed 2026-09-25 with `buildLaunchPreview`): start price $0.00001, graduation price $0.0001 after 759,746,911.68 tokens sold, base fee 2500 bps at 0 s, 855 at 100 s, 292 at 200 s, 100 at 300 s.
 
@@ -59,7 +54,7 @@ Example preview output for tKalshi at a $413.8 mark, $10,000 start, $100,000 gra
 
 ## From TypeScript
 
-The only code path in the repository that sends a launch is the `launch` step of `packages/dbc/src/devnet.ts`. Reduced to its parts, given a `Connection` `conn`, a funded `Keypair` `payer`, and the underlying mint `underlyingMint`:
+The `launch` step of `packages/dbc/src/devnet.ts` sends a launch (it ran on devnet, `DEVNET.md` step 5a). Reduced to its parts, given a `Connection` `conn`, a funded `Keypair` `payer`, and the underlying mint `underlyingMint`:
 
 ```ts
 import { Keypair, sendAndConfirmTransaction } from "@solana/web3.js";
@@ -94,4 +89,4 @@ Preconditions:
 - The vault for `underlyingMint` exists on the target cluster (the SDK reads the quote mint while building).
 - To buy on the pool you need wrapped tokens, so `wrap` first. `devnet.ts` `buy` then calls `client.pool.swap({ owner, pool, amountIn, minimumAmountOut, swapBaseForQuote: false, referralTokenAccount: null })`.
 
-To check a configuration against mainnet before any wrapped mint exists, run `pnpm sim green` in `packages/dbc` (JitoSOL stand-in) or call `/api/launch-sim`.
+To check a configuration against the live mainnet DBC program, run `pnpm sim green` in `packages/dbc` (quoted in JitoSOL, a fee-free legacy mint) or call `/api/launch-sim`.

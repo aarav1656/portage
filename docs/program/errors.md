@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Errors
 
@@ -12,7 +12,7 @@ Portage defines five custom errors in `PortageError` (`programs/portage/src/lib.
 | 6003 | 0x1773 | `BelowMinimum` | Amount after the transfer fee is below the caller's minimum | `wrap`, `unwrap` | `wrap`: amount received by the vault `< min_minted`. `unwrap`: amount received by `user_underlying` `< min_out` |
 | 6004 | 0x1774 | `SelfTransfer` | User underlying account cannot be the vault token account | `wrap`, `unwrap` | `user_underlying` is the vault's own `vault_token` account |
 
-Every error aborts the whole transaction, so no partial state (a burn without a payout, a deposit without a mint) persists.
+Every error aborts the whole transaction, so a burn without a payout or a deposit without a mint never lands.
 
 ## Framework errors callers will see
 

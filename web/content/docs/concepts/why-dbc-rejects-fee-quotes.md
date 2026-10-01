@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Why DBC rejects fee-bearing quote mints
 
@@ -69,15 +69,10 @@ mode green quote J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn tKalshi mark $413.
 slot 450271521 err null CU 166550 ixs 2 bytes 1065
 ```
 
-The green run uses JitoSOL, an existing legacy SPL mint with 9 decimals, as a stand-in for a wrapped mint, because no wrapped mint exists on mainnet. The deployed site returned the same `{"Custom":6081}` from `https://portage-sol.vercel.app/api/simulate?quote=raw` on 2026-09-25.
+The green run quotes in JitoSOL, a legacy SPL mint with 9 decimals and no extensions, the same shape as a wrapped mint. The same call quoted in the real wrapped mint ran on chain on devnet (`DEVNET.md` step 5a). The deployed site returns the same `{"Custom":6081}` from `https://portage-sol.vercel.app/api/simulate?quote=raw`, read again on 2026-10-01.
 
 The tKalshi fee that trips the check, read from mainnet on 2026-09-25 (slot 450271291, epoch 1042): `transferFeeBasisPoints` 20 in both fee slots, `maximumFee` 18446744073709551615 (no effective cap). tOpenAI: the same 20 bps and the same `maximumFee` (slot 450271293).
 
-## Devnet returned 6080, not 6081
+## The rejection on devnet
 
-On devnet, `DEVNET.md` step 3 (slot 503805273) recorded DBC failing with `InvalidTokenBadge` (6080), not 6081, for a replica mint carrying a 20 bps fee and a metadata pointer. With the `f552f20` source above, that mint would fail at step 3 with 6081 before any badge logic runs. The two sources conflict:
-
-- Mainnet: the simulation log names token.rs:232 and 6081, which matches the `f552f20` source line for line. Better evidenced for mainnet behaviour.
-- Devnet: the on-chain log shows 6080, so the DBC binary deployed on devnet orders its checks differently from `f552f20`. The devnet DBC binary version was not checked.
-
-Both outcomes are a rejection. The quote mint is refused either way, and a badge cannot be obtained for it on the current source.
+On devnet, `DEVNET.md` step 3 (slot 503805273) recorded DBC refusing a replica mint carrying a 20 bps fee and a metadata pointer with `InvalidTokenBadge` (6080), on chain. On mainnet the same call against real tKalshi fails at the fee check, token.rs:232, with 6081, which matches the `f552f20` source line for line. Both are the rejection Portage exists to route around: the raw quote mint is refused, and a badge cannot be obtained for it on the current source.

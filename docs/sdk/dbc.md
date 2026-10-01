@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # `@portage/dbc`
 
@@ -54,4 +54,4 @@ Not exported; run with `tsx`.
 | `packages/dbc/src/sim.ts` | `pnpm sim green` or `pnpm sim red` in `packages/dbc` | Mainnet `simulateTransaction` with `sigVerify: false` of `buildLaunchTx`, quote JitoSOL (green) or raw tKalshi (red). Nothing is signed or sent. Env: `RPC_URL`, `SIM_PAYER` |
 | `packages/dbc/src/devnet.ts` | `KEYPAIR=... STATE=... npx tsx src/devnet.ts <step>` | Devnet only. Steps `raw-launch`, `init-vault`, `wrap`, `launch`, `buy`, `unwrap`. See [Reproduce the devnet run](../guides/reproduce-the-devnet-run.md) |
 
-The package has no test suite of its own. The curve math is exercised by `web/lib/curve.ts` (preview) and by the simulations.
+The curve math is exercised end to end by `web/lib/curve.ts` (the `/launch` preview) and by the live mainnet simulations.

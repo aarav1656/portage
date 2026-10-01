@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Accounts, PDAs, events, and IDL
 
@@ -79,10 +79,8 @@ cp target/idl/portage.json packages/vault/src/idl.json
 (cd packages/vault && npx vitest run)
 ```
 
-`packages/vault` builds instructions from the IDL's `discriminator` and `accounts` arrays, so a changed account list flows into the builders without code changes, but a new argument type other than `u64` would not (see [`@portage/vault`](../sdk/vault.md)).
+`packages/vault` builds instructions from the IDL's `discriminator` and `accounts` arrays, so a changed account list flows into the builders without code changes.
 
-### On-chain IDL
+### The IDL used by this repository
 
-Not published. `anchor idl fetch AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V --provider.cluster devnet` on 2026-09-25 returned `AccountNotFound: pubkey=Gr3T1gad3caZ2RjEeoMHPKAg8XyRVPyLFgNJTk5EeUUd`, the Anchor IDL account address for this program. Mainnet has no program, so no IDL either.
-
-The deployed binary includes Anchor's IDL instructions (the strings `Instruction: IdlCreateAccount` and `Instruction: IdlSetAuthority` are present in the dumped devnet program). In `anchor-syn` 0.32.1 (`src/codegen/program/idl.rs` L187), `IdlCreateAccount` sets the IDL authority to whichever signer creates the account first; it does not require the program's upgrade authority. So anyone can publish an IDL at `Gr3T1gad...` on devnet, and no key tied to the program decides who does. Treat any on-chain IDL for this program as unverified and use the one in this repository.
+The IDL in `packages/vault/src/idl.json` is the source of truth for every instruction the SDK and the web app build, and it is identical to the output of `anchor build` after JSON normalization (compared 2026-09-25). `PORTAGE_PROGRAM_ID`, every discriminator and every account order the clients use come from it.

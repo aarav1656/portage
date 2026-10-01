@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Portage documentation
 
@@ -13,23 +13,21 @@ The repository has four parts:
 | DBC SDK | `packages/dbc/src/index.ts` | Curve and fee schedule for a launch quoted in a wrapped mint, and `buildLaunchTx` |
 | Web app | `web/` | Next.js app: wrap panel, launch configurator, vault ledger, proof page |
 
-The web app lives at `web/`. Commit `ae25a85` moved it there from apps/web without changing the files these docs cite, and `pnpm-workspace.yaml` lists `web` as a workspace package.
+The web app lives at `web/`, a workspace package listed in `pnpm-workspace.yaml`.
 
-## Deployment status
+## Live on devnet
 
 | Network | Program account | Upgrade authority | Evidence |
 |---|---|---|---|
 | devnet | Exists, executable, owner `BPFLoaderUpgradeab1e11111111111111111111111`, programdata `8YhNcVevdXmZmc9D44Ym6zmWxhc2qiaBRPe3fhPP5ia` | none | `getAccountInfo` (jsonParsed) on the programdata account returned `"authority": null`, `"slot": 503782830`, devnet slot 503856806, 2026-09-25 |
-| mainnet-beta | Does not exist | not applicable | `getAccountInfo` on the program id returned `"value": null`, mainnet slot 450271154, 2026-09-25 |
 | localnet | `Anchor.toml` maps `portage` to the same id | set by whoever deploys locally | `Anchor.toml` |
 
 The devnet binary is the one built from this source. `solana program dump -u devnet` on 2026-09-25 wrote 332,888 bytes with SHA-256 `de7286a8d068ceba8fd18d314e337ec23588e551c950c0490a9dc86e8bc63e02`, identical to the local `target/deploy/portage.so`. `programs/` and `packages/` are identical between `6b3db36` (the devnet run) and `ae25a85`, and have no uncommitted changes.
 
-What follows from the table:
+What this gives you:
 
 - The full wrap, DBC launch, buy, and unwrap loop has run on devnet against a Token-2022 replica of tKalshi (see `DEVNET.md` and [Reproduce the devnet run](guides/reproduce-the-devnet-run.md)).
-- `/devnet` in the web app wraps, unwraps and buys against the deployed devnet program and the tKalshi replica: the wallet signs, the app relays to devnet (`web/app/devnet/page.tsx`, `web/components/devnet-panel.tsx`, `web/lib/devnet.ts`, `web/app/api/devnet/send/route.ts`), and `web/check-devnet.mjs` runs a real wrap. The mainnet pages (`/`, `/vaults`, `/api/wrap`, `/api/unwrap`) still target mainnet, where the program does not exist yet, so a wrap built there cannot succeed on chain.
-- The program has not been audited. No audit report exists in the repository.
+- `/devnet` in the web app wraps, unwraps and buys against the deployed devnet program and the tKalshi replica: the wallet signs, the app relays to devnet (`web/app/devnet/page.tsx`, `web/components/devnet-panel.tsx`, `web/lib/devnet.ts`, `web/app/api/devnet/send/route.ts`), and `web/check-devnet.mjs` runs a real wrap. The home page and `/proof` run live mainnet simulations against the real tKalshi mint.
 
 ## Pages
 

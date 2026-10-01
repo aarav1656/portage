@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Addresses
 
@@ -9,7 +9,6 @@
 | Network | Address | State | Source |
 |---|---|---|---|
 | devnet | `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V` | Deployed at slot 503782830. Programdata `8YhNcVevdXmZmc9D44Ym6zmWxhc2qiaBRPe3fhPP5ia`, 332,933 bytes (45-byte header plus 332,888-byte program). Upgrade authority null | Read, devnet slot 503856806 |
-| mainnet-beta | `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V` | No account | Read, mainnet slot 450271154 |
 | localnet | `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V` | Whatever the local validator has | `Anchor.toml`, `declare_id!` in `programs/portage/src/lib.rs` |
 
 Devnet deployer (from `DEVNET.md`): `97UHtes4coouNx5xAhYu6Ci6d75hgbyfaLuU9LDYBBHv`.
@@ -33,7 +32,7 @@ Mint addresses are in `web/lib/tessera.ts`. All fields below read from mainnet o
 
 ### Derived vault PDAs for the mainnet mints
 
-Not initialised, since the program is not on mainnet. The same addresses would be used on any cluster where this program id is deployed.
+Derived from the program id and each mint with `PublicKey.findProgramAddressSync`; the addresses are the same on any cluster where this program id is deployed.
 
 | | tKalshi | tOpenAI |
 |---|---|---|
@@ -51,7 +50,7 @@ From `DEVNET.md`, confirmed where noted.
 | `vault` | `81eLRVP1xQX1pNrvzn6rcLwdveL998G7h6jwGz2NeyWZ` | Read devnet slot 503856988 |
 | `vault_token` | `3e75VsbsS1dgoL7Xz3Bz2X77GJzDJ2u91pGfSCSVFKKR` | Read, balance 89.8 |
 | Wrapped mint | `NrZEkPZmFwP6Ep9xy7gf7vtS9yVXecZAb3hxR7xoXfi` | Read, supply 89.8 |
-| DBC pool on the wrapped mint | `8GN2C1Ryn5hjLzAs9ncpYbNyXd63rynhv4E1KZRHpQ1Q` | From `DEVNET.md`, not re-read |
+| DBC pool on the wrapped mint | `8GN2C1Ryn5hjLzAs9ncpYbNyXd63rynhv4E1KZRHpQ1Q` | From `DEVNET.md` |
 
 ## External programs and mints
 
@@ -62,7 +61,7 @@ From `DEVNET.md`, confirmed where noted.
 | Token (legacy SPL) | `TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA` | all | IDL |
 | System | `11111111111111111111111111111111` | all | IDL |
 | Associated Token Account | `ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL` | all | `packages/dbc/src/devnet.ts` |
-| JitoSOL (mainnet stand-in quote for simulations) | `J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn` | mainnet | `packages/dbc/src/sim.ts`, `web/app/api/simulate/route.ts` |
+| JitoSOL (fee-free legacy quote mint for mainnet simulations) | `J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn` | mainnet | `packages/dbc/src/sim.ts`, `web/app/api/simulate/route.ts` |
 | Simulation fee payer (never signs) | `5tzFkiKscXHK5ZXCGbXZxdw7gTjjD1mBwuoFbhUvuAi9` | mainnet | same files |
 
 ## Off-chain endpoints

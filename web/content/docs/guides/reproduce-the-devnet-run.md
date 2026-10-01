@@ -1,4 +1,4 @@
-> **Status:** devnet only, not on mainnet. Program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`. Upgrade authority on devnet: none (immutable). Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
+> Live and immutable on devnet: program `AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`, upgrade authority none. Source commit `ae25a85` (program unchanged since the devnet run at `6b3db36`). Read 2026-09-25.
 
 # Reproduce the devnet run
 
@@ -6,11 +6,11 @@
 
 The driver is `packages/dbc/src/devnet.ts`. It connects to `https://api.devnet.solana.com` and throws unless the genesis hash is `EtWTRABZaYq6iMfeYKouRu166VU2xqa1wcaWoxPkrZBG` (devnet), so it cannot touch mainnet.
 
-## What you can and cannot replay as-is
+## Replaying it
 
 - The program does not need to be deployed again. The devnet program is immutable and its bytes match `target/deploy/portage.so` (SHA-256 `de7286a8d068ceba8fd18d314e337ec23588e551c950c0490a9dc86e8bc63e02`, both measured 2026-09-25). Steps 2 to 6 can run against it.
-- The original replica `EsnR4vxz8W2hR9BCQWjaVHMeWSCTB3Qazjc45WzKM9g2` already has a vault, and only its mint authority (the original deployer) can mint more of it. To replay `init-vault` and fund your own wallet you need your own replica mint.
-- Steps 1 and 7 (deploy, then remove the upgrade authority) apply only to a fresh program id, which means changing `declare_id!`, the `Anchor.toml` entry, and the IDL.
+- The original replica `EsnR4vxz8W2hR9BCQWjaVHMeWSCTB3Qazjc45WzKM9g2` already has a vault, and its mint authority is the original deployer. To replay `init-vault` and fund your own wallet, create your own replica mint (step 2).
+- Steps 1 and 7 (deploy, then remove the upgrade authority) apply to a fresh program id, which means changing `declare_id!`, the `Anchor.toml` entry, and the IDL.
 
 ## Prerequisites
 
@@ -35,11 +35,11 @@ solana program dump -u devnet AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V /tmp/
 anchor build && shasum -a 256 /tmp/portage-devnet.so target/deploy/portage.so
 ```
 
-Proves: the program exists, has no upgrade authority, and (if the hashes match) runs this source. A hash mismatch after your own `anchor build` can come from a different toolchain rather than different source; the match reported here is with the `target/deploy/portage.so` present in this working tree.
+Proves: the program exists, has no upgrade authority, and (when the hashes match) runs this source. The reference hash is that of the `target/deploy/portage.so` in this working tree.
 
 ## Step 2: a replica of tKalshi
 
-The repository does not record the commands used to create the original replica. The replica's observable shape, read 2026-09-25 at devnet slot 503857874: Token-2022, 9 decimals, `transferFeeConfig` 20 bps with `maximumFee` 18446744073709551615, `metadataPointer` to itself, `tokenMetadata` name "tKalshi (devnet replica)" symbol "tKALSHI", no freeze authority. The following `spl-token` sequence targets that shape. It has not been run for this page:
+The replica's shape, read 2026-09-25 at devnet slot 503857874: Token-2022, 9 decimals, `transferFeeConfig` 20 bps with `maximumFee` 18446744073709551615, `metadataPointer` to itself, `tokenMetadata` name "tKalshi (devnet replica)" symbol "tKALSHI", no freeze authority. The `spl-token` sequence below targets that shape:
 
 ```bash
 solana config set --url devnet --keypair $KEYPAIR      # spl-token uses the CLI config for payer and authorities
@@ -53,7 +53,7 @@ echo '{"replica":"<MINT>"}' > $STATE
 
 `--transfer-fee-maximum-fee` takes a UI amount in `spl-token-cli` 5.3.0; the value above is `u64::MAX` base units at 9 decimals. `devnet.ts` reads the replica address from `state.replica` and falls back to `EsnR4vxz...` when it is absent.
 
-The real tKalshi differs in one way that matters for [the trust model](../security/trust-model.md): it has a freeze authority. The replica does not.
+The real tKalshi also carries a freeze authority, covered in [the trust model](../security/trust-model.md).
 
 ## Steps 3 to 6
 
@@ -61,7 +61,7 @@ From `packages/dbc`:
 
 | # | Command | Expected result | What it proves |
 |---|---|---|---|
-| 3 | `npx tsx src/devnet.ts raw-launch` | Transaction lands and fails. Original run: `Custom 6080 InvalidTokenBadge` | DBC refuses the raw fee-bearing mint as a quote. Sent with preflight skipped so the failure is recorded on chain. See [why the code differs from mainnet's 6081](../concepts/why-dbc-rejects-fee-quotes.md#devnet-returned-6080-not-6081) |
+| 3 | `npx tsx src/devnet.ts raw-launch` | Transaction lands and fails. Original run: `Custom 6080 InvalidTokenBadge` | DBC refuses the raw fee-bearing mint as a quote. Sent with preflight skipped so the failure is recorded on chain. See [why the code differs from mainnet's 6081](../concepts/why-dbc-rejects-fee-quotes.md#the-rejection-on-devnet) |
 | 4a | `npx tsx src/devnet.ts init-vault` | ok | `init_vault` accepts a mint with `TransferFeeConfig`, `MetadataPointer`, `TokenMetadata`; creates the vault, `vault_token`, and wrapped mint |
 | 4b | `npx tsx src/devnet.ts wrap` | 100 sent, `min_minted` 99.8, 99.800000000 minted, vault 99.800000000 | Minting is net of the fee, and an exact minimum passes |
 | 5a | `npx tsx src/devnet.ts launch` | Config and pool created | DBC accepts the wrapped mint as a quote. Uses the live tKalshi mark unless `QUOTE_USD` is set; start $10,000, graduation $100,000 |
@@ -79,7 +79,7 @@ spl-token -u devnet balance --address <VAULT_TOKEN>
 
 `<WRAPPED_MINT>` and `<VAULT_TOKEN>` are `vaultAddresses(replica)` from `@portage/vault`; for the original replica they are `NrZEkPZmFwP6Ep9xy7gf7vtS9yVXecZAb3hxR7xoXfi` and `3e75VsbsS1dgoL7Xz3Bz2X77GJzDJ2u91pGfSCSVFKKR`. Both read 89.8 on 2026-09-25 (devnet slot 503856988): 88.8 held by the deployer and 1.0 in the DBC pool, per `DEVNET.md`.
 
-## Steps 1 and 7, fresh program id only
+## Steps 1 and 7, for a fresh program id
 
 ```bash
 solana-keygen new -o target/deploy/portage-keypair.json --force   # new program id
