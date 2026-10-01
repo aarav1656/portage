@@ -1,10 +1,9 @@
-import { LaunchConfigurator, type QuoteInfo } from "@/components/launch-configurator";
+import { LaunchConfigurator, type Quotes } from "@/components/launch-configurator";
 import { PageHeader } from "@/components/page-header";
 import { fetchMarketSnapshot } from "@/lib/market";
-import type { TesseraKey } from "@/lib/tessera";
 
 export default async function LaunchPage() {
-  let quotes: Partial<Record<TesseraKey, QuoteInfo>> = {};
+  let quotes: Quotes = {};
   let quotesError: string | null = null;
   try {
     const snapshot = await fetchMarketSnapshot();

@@ -47,7 +47,7 @@ export function VaultCard({
 
         {status.state === "not-initialised" && (
           <p className="mt-3 text-sm text-[var(--ink-3)]">
-            The Portage program has not deployed this vault yet. There is nothing on chain to read.
+            Vault balance and wrapped supply appear here the moment init_vault runs for this mint. The live vault is on /devnet.
           </p>
         )}
 

@@ -75,7 +75,7 @@ export function LaunchSimPanel({
             <Stamp variant="rejected">Fail</Stamp>
           )
         ) : (
-          <Stamp variant="pending">Not run</Stamp>
+          <Stamp variant="pending">Ready</Stamp>
         )}
       </div>
       <p className="mt-1 text-sm text-[var(--ink-2)]">

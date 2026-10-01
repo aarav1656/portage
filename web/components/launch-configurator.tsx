@@ -12,11 +12,13 @@ export interface QuoteInfo {
   decimals: number;
 }
 
+export type Quotes = { [K in TesseraKey]?: QuoteInfo };
+
 export function LaunchConfigurator({
   quotes,
   quotesError,
 }: {
-  quotes: Partial<Record<TesseraKey, QuoteInfo>>;
+  quotes: Quotes;
   quotesError: string | null;
 }) {
   const [name, setName] = useState("Portage Launch");

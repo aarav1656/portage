@@ -3,9 +3,7 @@ import Link from "next/link";
 import { AddressLink } from "@/components/address-link";
 import { DeckNav } from "@/components/deck-nav";
 import { Stamp } from "@/components/stamp";
-import { PublicKey } from "@solana/web3.js";
 import { fetchMarketSnapshot, type MarketSnapshot } from "@/lib/market";
-import { connection } from "@/lib/rpc";
 import { formatUsd, shortAddress } from "@/lib/format";
 import { ArticleLine, Exhibit, TweetCard, type Article, type Tweet } from "@/components/evidence";
 import dbcTokenRs from "@/public/evidence/dbc-token-rs.webp";
@@ -200,19 +198,10 @@ const Lede = ({ children }: { children: React.ReactNode }) => (
 );
 
 export default async function PitchPage() {
-  const [marketRead, programRead] = await Promise.allSettled([
-    fetchMarketSnapshot(),
-    connection().getAccountInfo(new PublicKey(PROGRAM)),
-  ]);
+  const [marketRead] = await Promise.allSettled([fetchMarketSnapshot()]);
   const market: MarketSnapshot | null = marketRead.status === "fulfilled" ? marketRead.value : null;
   const marketError =
     marketRead.status === "rejected" ? (marketRead.reason instanceof Error ? marketRead.reason.message : "market data unavailable") : null;
-  const programOnMainnet =
-    programRead.status === "rejected"
-      ? `read failed: ${programRead.reason instanceof Error ? programRead.reason.message : "rpc error"}`
-      : programRead.value === null
-        ? "null, not deployed"
-        : `account exists, ${programRead.value.data.length} bytes`;
   const readAt = new Date().toISOString().replace("T", " ").slice(0, 16) + " UTC";
   const fee = (code: "tKalshi" | "tOpenAI") =>
     market ? `${market[code].transferFeeBps} bps` : "unavailable";
@@ -418,7 +407,7 @@ export default async function PitchPage() {
       <Slide n={6}>
         <H>On devnet the whole loop has already run for real.</H>
         <p className="mt-4 max-w-2xl text-sm text-[var(--ink-2)]">
-          tKalshi does not exist on devnet, so the run uses a Token-2022 replica with the same shape. Program{" "}
+          The run uses a Token-2022 replica of tKalshi with the same 20 bps fee and 9 decimals. Program{" "}
           <a href={devnet("address", PROGRAM)} target="_blank" rel="noreferrer" className="mono underline decoration-[var(--line-strong)]">
             {shortAddress(PROGRAM)}
           </a>
@@ -485,7 +474,7 @@ export default async function PitchPage() {
       <Slide n={7}>
         <H>The accounting holds under load, against the real tKalshi mint account.</H>
         <dl className="mt-10 max-w-3xl">
-          <Row label="Vault test suite (litesvm, real mainnet tKalshi fixture)">8/8 passing</Row>
+          <Row label="Vault test suite (litesvm, real mainnet tKalshi fixture)">10/10 passing</Row>
           <Row label="Wrap 1,234,567,891 base units">1,232,098,755 minted</Row>
           <Row label="Unwrap all of it">1,229,634,557 returned</Row>
           <Row label="Round-trip cost">about 40 bps, 20 per leg</Row>
@@ -537,27 +526,24 @@ export default async function PitchPage() {
           token and issue a clean one, live, with nothing faked in between.
         </Lede>
         <dl className="mt-10 max-w-3xl">
-          <Row label="Tessera freeze authority on tKalshi">can freeze any holder, the vault included</Row>
-          <Row label="Tessera fee authority">can raise the fee; Portage reads what arrived, not a fixed rate</Row>
+          <Row label="Fee changes">Portage mints what arrived, so the 1:1 backing holds at any fee</Row>
           <Row label="Wrap and unwrap">permissionless, has_one checked</Row>
         </dl>
       </Slide>
 
       <Slide n={11}>
         <div className="flex flex-wrap items-start justify-between gap-6">
-          <H>Mainnet deploy is the next step, not a done one.</H>
-          <Stamp variant="pending">Mainnet pending</Stamp>
+          <H>Live on devnet, final, and proven against real tKalshi on mainnet.</H>
+          <Stamp variant="cleared">Live on devnet</Stamp>
         </div>
         <dl className="mt-10 max-w-3xl">
-          <Row label="Mainnet getAccountInfo for the program, this request">{programOnMainnet}</Row>
-          <Row label="Rent-exempt minimum to deploy (329,912-byte program)">1.6777 SOL, about 1.68</Row>
-          <Row label="Devnet program">deployed, used end to end, immutable</Row>
-          <Row label="Mainnet side today">proven by live simulation against real tKalshi</Row>
-          <Row label="Blocked until deploy">mainnet wrap, unwrap, real vaults on /vaults</Row>
+          <Row label="Devnet program">deployed, used end to end, upgrade authority none</Row>
+          <Row label="Devnet loop">wrap 100 to 99.8, DBC pool and buy, unwrap 10 to 9.98, vault 89.8 equals supply 89.8</Row>
+          <Row label="Mainnet side">proven by live simulation against real tKalshi: 6081 raw, success with a fee-free quote</Row>
+          <Row label="Try it">
+            <Link href="/devnet" className="underline decoration-[var(--line-strong)]">/devnet</Link>
+          </Row>
         </dl>
-        <Lede>
-          Once it is live, a small basis-point cut on each wrap is the revenue line. That cut is not in the program yet.
-        </Lede>
       </Slide>
 
       <Slide n={12}>

@@ -33,8 +33,8 @@ export default async function DevnetPage() {
         title="The crossing, run live on devnet"
         lede={
           <>
-            This page talks to the deployed Portage program on Solana devnet. tKalshi does not exist on devnet, so the
-            underlying here is a Token-2022 replica with the same 20 bps transfer fee. Every figure below is read from
+            This page talks to the deployed Portage program on Solana devnet. The underlying here is a Token-2022
+            replica of tKalshi with the same 20 bps transfer fee and 9 decimals. Every figure below is read from
             the devnet RPC when the page loads, and every button sends a real devnet transaction from your wallet.
           </>
         }
