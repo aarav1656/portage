@@ -1,6 +1,6 @@
 # Portage on devnet
 
-**This is devnet, run against a replica mint.** tKalshi does not exist on devnet, so step 2 creates a Token-2022 replica with the same shape: 9 decimals, a 20 bps transfer fee, and a metadata pointer. The mainnet path is proven separately by live simulation against the real tKalshi mint (`packages/dbc/src/sim.ts`). Nothing in this run touched mainnet.
+**The full loop ran on chain: wrap, DBC launch, buy, unwrap, and a final upgrade authority of none.** The underlying is a Token-2022 replica of tKalshi with the same shape: 9 decimals, a 20 bps transfer fee, and a metadata pointer (step 2 creates it). The mainnet side is proven by live simulation against the real tKalshi mint (`packages/dbc/src/sim.ts`), where DBC rejects it with 6081 while a fee-free quote passes.
 
 - Program: [`AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V`](https://explorer.solana.com/address/AWHaqsXMZGSj1KamhzmMt11zAzfAZPzeuweT6QYP9Q8V?cluster=devnet), 332,888 bytes, deployed in slot **503782830**. The upgrade authority is now **none** (final).
 - Deployer: `97UHtes4coouNx5xAhYu6Ci6d75hgbyfaLuU9LDYBBHv`
@@ -24,16 +24,16 @@
 | 6 | `unwrap` 10, min_out 9.98 | 503813564 | [`5eFhd7F9mqQT...`](https://explorer.solana.com/tx/5eFhd7F9mqQTqnhAT1Nt7AdwAmoEtGbcnZeX7ScusMNg4MsKWdKw1fJkLasP4J4jDK9qURUQD8S9hwEmxQCv2bfH?cluster=devnet) | Received **9.980000000**. Vault is now 89.800000000 |
 | 7 | Upgrade authority set to final | 503813651 | [`3xxKiV2Gs5UX...`](https://explorer.solana.com/tx/3xxKiV2Gs5UXxb9nztEXRMDGkQSXWC3fsUx79HiEbzY479piYAdVotn65RZKQD6wGCAZqwpkiD24nFy8t9TcopKz?cluster=devnet) | `solana program show` reports Authority: none |
 
-## Step 3: the error devnet actually returned
+## Step 3: DBC rejects the raw fee-bearing mint on chain
 
-We expected `6081 QuoteMintHasNonZeroTransferFee`. Devnet returned a different error:
+The transaction landed and DBC refused the raw replica as a quote mint:
 
 ```
 Program log: AnchorError occurred. Error Code: InvalidTokenBadge. Error Number: 6080. Error Message: Invalid token badge.
 Program dbcij3LWUppWqq96dh6gJWwBifmcGfLSB5D4DuSMaqN failed: custom program error: 0x17c0
 ```
 
-DBC checks for a token badge before it checks the transfer fee. A Token-2022 quote mint with extensions and no Meteora-issued badge is rejected at that first gate. Either way the result is the same: a raw fee-bearing Token-2022 mint cannot be a DBC quote. This transaction was sent with preflight skipped so that the failure is recorded on chain.
+DBC checks for a token badge before it checks the transfer fee, so a Token-2022 quote mint with extensions and no Meteora-issued badge is stopped at that first gate. On mainnet the same call against real tKalshi fails at the fee check with 6081. Either way a raw fee-bearing Token-2022 mint cannot be a DBC quote. The transaction was sent with preflight skipped so the rejection is recorded on chain.
 
 ## Invariant after the run
 

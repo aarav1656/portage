@@ -102,5 +102,5 @@ in `--paper-2`, no spinner-only screens), empty (named, e.g. "vault not initiali
 
 ## Exports
 
-`apps/web/app/tokens.css` carries the full custom-property block above, imported once from
+`web/app/tokens.css` carries the full custom-property block above, imported once from
 `app/globals.css` ahead of any Tailwind layer.
